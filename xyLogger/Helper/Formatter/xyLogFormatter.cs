@@ -9,9 +9,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using xyLogger.Logger;
+using xyLogger.Loggers;
 
-namespace xyLogger.Helper
+namespace xyLogger.Helpers.Formatters
 {
     /// <summary>
     /// The <c>xyLogFormatter</c> provides static formatting utilities for structured logging.

@@ -5,9 +5,10 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
-using xyLogger.Helper;
+using xyLogger.Helpers;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using xyMessageFactory.Messages;
+using xyLogger.Helpers.Formatters;
 
 namespace xyMessageFactory.Factories
 {
@@ -21,7 +22,7 @@ namespace xyMessageFactory.Factories
         /// Really nice, lol
         /// </summary>
         [SuppressMessage("Style", "IDE1006:Benennungsstile", Justification = "Mimimiimimimimimimimimimimimii")]
-        public class xyBaseMessageFactory : IAbsoluteMessageProvider,
+        public class xyBaseMessageFactory : IMessageSource,
     ICollectionMessages, IStreamMessages, IParameterMessages,
     IPathMessages, IFileOperationMessages, ISerializationMessages,
     IDbConnectionMessages, IModelStateMessages, ICrudMessages,
@@ -35,7 +36,7 @@ namespace xyMessageFactory.Factories
             /// </summary>
             public string[]? Description { get; set; }
 
-        protected IStringLocalizer? Localizer { get; init; }
+            protected IStringLocalizer? Localizer { get; init; }
 
 
 
@@ -294,13 +295,13 @@ namespace xyMessageFactory.Factories
             /// Invalid ID
             /// </summary>
             /// <returns></returns>
-            public string InvalidID(string ID) => $"The provided ID ({ID}) is invalid, please correct input!";
+            public string InvalidID(string? ID = null) => ID is not null ? $"The provided ID ({ID}) is invalid, please correct input!": $"The provided ID is invalid, please correct input!";
 
         /// <summary>
         /// Valid ID
         /// </summary>
         /// <returns></returns>
-        public string ValidID(string ID) => $"The provided ID "+ID+" is valid, please proceed!";
+        public string ValidID(string? ID = null) => ID is not null?$"The provided ID "+ID+" is valid, please proceed!": $"The provided ID  is valid, please proceed!";
         /// <summary>
         /// Username or password is wrong
         /// </summary>

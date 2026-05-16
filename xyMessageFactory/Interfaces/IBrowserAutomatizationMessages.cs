@@ -1,7 +1,7 @@
 using OpenQA.Selenium;
-using xyMessageFactory.Messages;
 
-public interface IBrowserAutomatizationMessages : IAbsoluteMessageProvider,
+namespace xyMessageFactory.Messages;
+public interface IBrowserAutomatizationMessages : IMessageSource,
     IFrameSwitchingMessages, IResultStatusCodeMessages, IModalDialogMessages,
     IWaitingConditionsMessages, IScrollingMessages, IDragAndDropMessages,
     IAlertMessages, IJavaScriptMessages, ITabSwitchingMessages,
@@ -11,7 +11,7 @@ public interface IBrowserAutomatizationMessages : IAbsoluteMessageProvider,
 {
 
 }
-public interface IFrameSwitchingMessages : IAbsoluteMessageProvider
+public interface IFrameSwitchingMessages : IMessageSource
 {
     public string FrameSwitch(By by);
 
@@ -22,7 +22,7 @@ public interface IFrameSwitchingMessages : IAbsoluteMessageProvider
     public string FrameSwitchFailed(By by);
 
 }
-public interface IResultStatusCodeMessages : IAbsoluteMessageProvider
+public interface IResultStatusCodeMessages : IMessageSource
 {
     public string ActionSuccess(string description);
 
@@ -33,7 +33,7 @@ public interface IResultStatusCodeMessages : IAbsoluteMessageProvider
     public string OperationCompleted(string name);
 
 }
-public interface IModalDialogMessages : IAbsoluteMessageProvider
+public interface IModalDialogMessages : IMessageSource
 {
     public string ModalDetected(By by);
     public string ModalNotFound(By by);
@@ -41,7 +41,7 @@ public interface IModalDialogMessages : IAbsoluteMessageProvider
     public string ModalHandled(By by);
     public string ModalHandlingFailed(By by);
 }
-public interface IWaitingConditionsMessages : IAbsoluteMessageProvider
+public interface IWaitingConditionsMessages : IMessageSource
 {
     public string WaitUntilVisible(By by, int seconds);
 
@@ -50,7 +50,7 @@ public interface IWaitingConditionsMessages : IAbsoluteMessageProvider
     public string WaitConditionFail(By by, string condition);
 
 }
-public interface IScrollingMessages : IAbsoluteMessageProvider
+public interface IScrollingMessages : IMessageSource
 {
     public string ScrolledToElement(By by);
 
@@ -58,14 +58,14 @@ public interface IScrollingMessages : IAbsoluteMessageProvider
 
     public string ScrolledByOffset(int x, int y);
 }
-public interface IDragAndDropMessages : IAbsoluteMessageProvider
+public interface IDragAndDropMessages : IMessageSource
 {
     public string DragAndDropSuccess(By source, By target);
 
     public string DragAndDropFail(By source, By target);
 
 }
-public interface IAlertMessages : IAbsoluteMessageProvider
+public interface IAlertMessages : IMessageSource
 {
     public string AlertPresent(string text);
     public string AlertNotPresent();
@@ -76,7 +76,7 @@ public interface IAlertMessages : IAbsoluteMessageProvider
     public string AlertHandlingFailed(string reason);
 
 }
-public interface IJavaScriptMessages : IAbsoluteMessageProvider
+public interface IJavaScriptMessages : IMessageSource
 {
     public string JsExecuted(string description);
 
@@ -86,7 +86,7 @@ public interface IJavaScriptMessages : IAbsoluteMessageProvider
 
     public string JsReturnedValue(string description, string value);
 }
-public interface ITabSwitchingMessages : IAbsoluteMessageProvider
+public interface ITabSwitchingMessages : IMessageSource
 {
     public string TabSwitched(int index);
 
@@ -95,7 +95,7 @@ public interface ITabSwitchingMessages : IAbsoluteMessageProvider
     public string TabClosed(int index);
 
 }
-public interface ICookieMessages : IAbsoluteMessageProvider
+public interface ICookieMessages : IMessageSource
 {
     public string CookieAdded(string name);
     public string CookieDeleted(string name);
@@ -103,7 +103,7 @@ public interface ICookieMessages : IAbsoluteMessageProvider
     public string CookieNotFound(string name);
     public string CookieOperationFailed(string name, string action);
 }
-public interface IElementLookupAndValidationMessages : IAbsoluteMessageProvider
+public interface IElementLookupAndValidationMessages : IMessageSource
 {
     public string ElementVisible(By by);
     public string ElementInvisible(By by);
@@ -120,7 +120,7 @@ public interface IElementLookupAndValidationMessages : IAbsoluteMessageProvider
 
     public string ElementAttributeMismatch(By by, string attr, string expected, string actual);
 }
-public interface IFormSubmissionMessages : IAbsoluteMessageProvider
+public interface IFormSubmissionMessages : IMessageSource
 {
     public string FormSubmitStart(By by);
 
@@ -130,7 +130,7 @@ public interface IFormSubmissionMessages : IAbsoluteMessageProvider
 
     public string FormSubmitTimeout(By by, int seconds);
 }
-public interface IUploadMessages : IAbsoluteMessageProvider
+public interface IUploadMessages : IMessageSource
 {
     public string UploadStart(string filePath);
 
@@ -140,7 +140,7 @@ public interface IUploadMessages : IAbsoluteMessageProvider
 
     public string UploadElementNotFound(By by);
 }
-public interface IDownloadMessages : IAbsoluteMessageProvider
+public interface IDownloadMessages : IMessageSource
 {
     public string DownloadStarted(string url);
     public string DownloadTimeout(string url, int seconds);
@@ -148,13 +148,13 @@ public interface IDownloadMessages : IAbsoluteMessageProvider
     public string DownloadSuccess(string filePath);
     public string DownloadFail(string url);
 }
-public interface IScreenshotMessages : IAbsoluteMessageProvider
+public interface IScreenshotMessages : IMessageSource
 {
     public string ScreenshotSuccess(string filePath);
     public string ScreenshotFail(Exception ex);
 
 }
-public interface IEnterStuffMessages : IAbsoluteMessageProvider
+public interface IEnterStuffMessages : IMessageSource
 {
     public string EnterPassword(By by, string tag, string type);
 
@@ -171,7 +171,7 @@ public interface IEnterStuffMessages : IAbsoluteMessageProvider
     public string EnterFail(By by);
 
 }
-public interface IClickingMessages : IAbsoluteMessageProvider
+public interface IClickingMessages : IMessageSource
 {
     public string ClickSuccess(string textOrTag);
     public string ClickFail(By by);
@@ -180,7 +180,7 @@ public interface IClickingMessages : IAbsoluteMessageProvider
     public string ClickStale(By by);
     public string ClickUnexpected(By by);
 }
-public interface INavigationMessages : IAbsoluteMessageProvider
+public interface INavigationMessages : IMessageSource
 {
     public string NavigationStart(string url);
     public string NavigationTimeout(string url, int seconds);

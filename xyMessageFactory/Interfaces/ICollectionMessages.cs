@@ -5,7 +5,7 @@ namespace xyMessageFactory.Messages;
 //public interface IMessages 
 //{
 //}
-public interface ICollectionMessages : IAbsoluteMessageProvider
+public interface ICollectionMessages : IMessageSource
 {
     /// <summary>
     /// IEnumerable is empty
@@ -45,18 +45,18 @@ public interface ICollectionMessages : IAbsoluteMessageProvider
     public string EmptyDictionary(string? nameOfDictionary = null);
 }
 
-public interface IStreamMessages : IAbsoluteMessageProvider
+public interface IStreamMessages : IMessageSource
 {
     public string FileStreamError(string? file = null);
     public string FileStreamSuccess(string? file = null);
 }
 
-public interface IPathMessages : IAbsoluteMessageProvider
+public interface IPathMessages : IMessageSource
 {
     public string PathNotFound(string? path = null);
 }
 
-public interface IFileOperationMessages : IAbsoluteMessageProvider
+public interface IFileOperationMessages : IMessageSource
 {
     public string FileNotFound(string? file = null);
 
@@ -68,7 +68,7 @@ public interface IFileOperationMessages : IAbsoluteMessageProvider
 
 }
 
-public interface ISerializationMessages : IAbsoluteMessageProvider
+public interface ISerializationMessages : IMessageSource
 {
     /// <summary>
     /// Successfully serialized the target
@@ -135,7 +135,7 @@ public interface ISerializationMessages : IAbsoluteMessageProvider
 
 }
 
-public interface IParameterMessages : IAbsoluteMessageProvider
+public interface IParameterMessages : IMessageSource
 {
     /// <summary>
     /// 
@@ -219,7 +219,7 @@ public interface IParameterMessages : IAbsoluteMessageProvider
 
 }
 
-public interface IDbConnectionMessages : IAbsoluteMessageProvider
+public interface IDbConnectionMessages : IMessageSource
 {
     public string ConnectionStringNotFound(string? name = null);
 
@@ -228,7 +228,7 @@ public interface IDbConnectionMessages : IAbsoluteMessageProvider
     public string DatabaseQueryError(string? query = null);
 }
 
-public interface IModelStateMessages : IAbsoluteMessageProvider
+public interface IModelStateMessages : IMessageSource
 {
     public string ModelUnvalidated(string? modelName = null);
 
@@ -240,7 +240,7 @@ public interface IModelStateMessages : IAbsoluteMessageProvider
 
 }
 
-public interface ICrudMessages : IAbsoluteMessageProvider
+public interface ICrudMessages : IMessageSource
 {
     public string Created([MaybeNull] int? ID = null);
 
@@ -268,7 +268,7 @@ public interface ICrudMessages : IAbsoluteMessageProvider
 
 }
 
-public interface IEfCoreMessages : IAbsoluteMessageProvider
+public interface IEfCoreMessages : IMessageSource
 {
     public string EntryNotFound(object ID);
 
@@ -292,7 +292,7 @@ public interface IEfCoreMessages : IAbsoluteMessageProvider
 
 }
 
-public interface ISecurityMessages : IAbsoluteMessageProvider
+public interface ISecurityMessages : IMessageSource
 {
     public string EncryptionFailed(string? target = null);
 
@@ -301,7 +301,7 @@ public interface ISecurityMessages : IAbsoluteMessageProvider
     public string InvalidCertificate(string? cert = null);
 }
 
-public interface IKeyHandlingMessages : IAbsoluteMessageProvider
+public interface IKeyHandlingMessages : IMessageSource
 {
     public string KeySet(string? key = null);
     public string KeyNotSet(string? key = null);
@@ -311,14 +311,14 @@ public interface IKeyHandlingMessages : IAbsoluteMessageProvider
 
 }
 
-public interface ITokenHandlingMessages : IAbsoluteMessageProvider
+public interface ITokenHandlingMessages : IMessageSource
 {
     public string TokenGenerated(string? tokenID = null);
     public string TokenNotGenerated(string? tokenID = null);
     public string TokenExpired(string? tokenID = null);
 }
 
-public interface INetworkMessages : IAbsoluteMessageProvider
+public interface INetworkMessages : IMessageSource
 {
     public string NetworkUnavailable(string? host = null);
 
@@ -329,7 +329,7 @@ public interface INetworkMessages : IAbsoluteMessageProvider
 }
 
 
-public interface IUserMessages : IAbsoluteMessageProvider
+public interface IUserMessages : IMessageSource
 {
     public string UserNotFound(string? user = null);
 
@@ -339,7 +339,7 @@ public interface IUserMessages : IAbsoluteMessageProvider
 
 }
 
-public interface ILoginMessages : IAbsoluteMessageProvider
+public interface ILoginMessages : IMessageSource
 {
     public string LoginStart(string url);
 
@@ -350,7 +350,7 @@ public interface ILoginMessages : IAbsoluteMessageProvider
 }
 
 
-public interface IWindowMessages : IAbsoluteMessageProvider
+public interface IWindowMessages : IMessageSource
 {
     public string WindowSwitch(string handle);
     public string WindowSwitched(string title);
@@ -365,7 +365,7 @@ public interface IWindowMessages : IAbsoluteMessageProvider
 
 }
 
-public interface IKeyPressMessages : IAbsoluteMessageProvider
+public interface IKeyPressMessages : IMessageSource
 {
     public string KeyPressed(string key);
 
@@ -382,7 +382,7 @@ public interface IKeyPressMessages : IAbsoluteMessageProvider
     public string MouseActionFailed(string action, string reason);
 }
 
-public interface ISystemMessages : IAbsoluteMessageProvider
+public interface ISystemMessages : IMessageSource
 {
     public string OperationFailed(string? operation = null);
 

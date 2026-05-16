@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using xyLogger.Logger;
+using xyLogger.Loggers;
 
-namespace xyLogger.Helper
+namespace xyLogger.Helpers.Archiver
 {
     internal class xyLogArchiver
     {

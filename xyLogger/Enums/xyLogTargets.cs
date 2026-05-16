@@ -1,4 +1,5 @@
-﻿public enum xyLogTargets
+﻿namespace xyLogger.Enums;
+public enum xyLogTargets
 {
     StandardSystemConsole = 0,
     OwnDebugConsole = 1,

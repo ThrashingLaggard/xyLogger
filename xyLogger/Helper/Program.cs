@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace xyLogger.Helper
+namespace xyLogger.Helpers
 {
     internal class Program
     {

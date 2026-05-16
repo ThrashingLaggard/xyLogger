@@ -5,9 +5,12 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using xyLogger.Helper;
+using xyLogger.Enums;
+using xyLogger.Helpers;
+using xyLogger.Helpers.Archiver;
+using xyLogger.Helpers.Formatters;
 
-namespace xyLogger.Logger
+namespace xyLogger.Loggers
 {
 
     /// <summary>
