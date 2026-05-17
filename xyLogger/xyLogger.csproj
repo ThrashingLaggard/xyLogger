@@ -12,7 +12,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>ThrashingLaggard</Authors>
     <Company>$(Authors) Industries</Company>
-    <PackageVersion>1.0.1</PackageVersion>
+    <PackageVersion>1.0.2</PackageVersion>
     <Description>Logging lib with little static logger for quick usage and ILogger integration for production</Description>
   </PropertyGroup>
 
