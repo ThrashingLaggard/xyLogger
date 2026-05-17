@@ -16,6 +16,9 @@ namespace xyLogger.Models
         /// </summary>
         public required Exception Exception { get; init; }
 
+        public string? CallerFile { get; init; }
+        public int CallerLine { get; init; }
+
         /// <summary>
         /// The inner exception
         /// </summary>
@@ -62,8 +65,10 @@ namespace xyLogger.Models
         public IDictionary? CustomData { get; set; }
 
 
-        public xyExceptionEntry(Exception exception_)
+        public xyExceptionEntry(Exception exception_, string? callerFile_ = null, int callerLine_ = 0)
         {
+            CallerFile = callerFile_?? "";
+            CallerLine = callerLine_;
             Exception = exception_;
             InnerException = exception_.InnerException ?? default!;
             TypeOfException = exception_.GetType();

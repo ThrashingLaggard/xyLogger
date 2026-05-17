@@ -30,8 +30,9 @@ namespace xyLogger.Helpers.Formatters
                 string timestamp = DateTime.Now.ToString();
                 string message = logEntry.Message;
                 Exception? exception = logEntry.Exception?? default;
+                string calllerInfo = logEntry.CallerFile + "-" + callerName ?? "" + logEntry.CallerLine;
 
-                string formattedMessage = $"[{ID}{timestamp}] [{level+""}] [{source}] \n{description}\n{comment}\n{message}\n";
+                string formattedMessage = $"[{ID}{timestamp}] [{level+""}] \n[{calllerInfo}] \n[{source}] \n{description}\n{comment}\n{message}\n";
                 
                 if(exception is not null)
                 {
@@ -57,12 +58,16 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="description"></param>
         /// <param name="comment"></param>
         /// <param name="exception"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTime timestamp,  uint? id = null, string? description = null, string? comment= null, Exception? exception = null)
+        public xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTime timestamp,  uint? id = null, string? description = null, string? comment= null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
         {
-            xyDefaultLogEntry entry = new(source_: source, level_: level, message_: message, exception_: exception, timestamp_: timestamp)
+            xyDefaultLogEntry entry = new(source_: source, level_: level, message_: message, exception_: exception, timestamp_: timestamp, callerFile_: callerFile, callerLine_: callerLine)
             {
                 ID = id ?? 0,
+                CallerFile = callerFile ?? "",
+                CallerLine = callerLine ,
                 Description = description ?? "",
                 Comment = comment ?? "",
                 Source = source,

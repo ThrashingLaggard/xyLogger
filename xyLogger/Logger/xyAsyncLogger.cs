@@ -49,7 +49,7 @@ namespace xyLogger.Loggers
                 string parent = Directory.GetParent(Environment.CurrentDirectory)?.FullName
                  ?? Environment.CurrentDirectory;
 
-                filepath = Path.Combine(parent, "logs", "app.log"); // kein führendes /
+                filepath = Path.Combine(parent, "logs", "app.log"); 
 
             }
             Directory.CreateDirectory(Path.GetDirectoryName(filepath)!);
@@ -199,9 +199,9 @@ namespace xyLogger.Loggers
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
         /// <returns></returns>
-        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null, string? callerName = null, string? callerFile = null, int? callerLine = null)
+        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null, string? callerName = null, string? callerFile = null, int callerLine = 0)
         {
-            excEntry = FormatIntoExceptionEntry(ex, information);
+            excEntry = FormatIntoExceptionEntry(ex, information, callerFile, callerLine);
 
             if (ExceptionFormatter is not null)
             {
@@ -246,12 +246,14 @@ namespace xyLogger.Loggers
         /// <param name="description"></param>
         /// <param name="comment"></param>
         /// <param name="exception"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null)
+        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
         {
             if (MessageEntryFormatter is not null)
             {
-                return MessageEntryFormatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception);
+                return MessageEntryFormatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception, callerFile, callerLine);
             }
             else    // fallback for  DI fails
             {
@@ -265,11 +267,13 @@ namespace xyLogger.Loggers
         /// </summary>
         /// <param name="exception"></param>
         /// <param name="information"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null)
+        public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null, string? callerFile = null, int callerLine = 0)
         {
             ExceptionEntryFormatter ??= new xyDefaultExceptionEntryFormatter();
-            return ExceptionEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information);
+            return ExceptionEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information,null,null, callerFile, callerLine);
         }
 
         #endregion

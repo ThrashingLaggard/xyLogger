@@ -28,7 +28,9 @@ namespace xyLogger.Interfaces
         /// <param name="description"></param>
         /// <param name="comment"></param>
         /// <param name="exception"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null);
+        xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null, string? callerFile = null, int callerLine = 0);
     }
 }

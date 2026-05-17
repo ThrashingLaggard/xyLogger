@@ -12,10 +12,12 @@ namespace xyLogger.Helpers.Formatters
 
 
 
-        public xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTime? timestamp = null,string? message = null,  uint? id = null, string? description = null)
+        public xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTime? timestamp = null,string? message = null,  uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0)
         {
-            xyExceptionEntry entry = new(exception)
+            xyExceptionEntry entry = new(exception, callerFile, callerLine)
             {
+                CallerFile = callerFile,
+                CallerLine = callerLine,
                 Exception = exception,
                 Message = message ?? "",
                 Timestamp = timestamp ?? DateTime.Now,

@@ -58,9 +58,11 @@ namespace xyLogger.Models
         public xyExceptionEntry ExceptionEntry { get; set; }
 
         [JsonConstructor]
-        public xyDefaultLogEntry(string source_, LogLevel level_, string message_, DateTime timestamp_, Exception? exception_ = null)
+        public xyDefaultLogEntry(string source_, LogLevel level_, string message_, DateTime timestamp_, Exception? exception_ = null, string? callerFile_ = null, int callerLine_ = 0)
         {
             Timestamp = timestamp_;
+            CallerFile = callerFile_;
+            CallerLine = callerLine_;
             Source = source_;
             Level = level_;
             Message = message_;
