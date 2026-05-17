@@ -146,7 +146,7 @@ namespace xyLogger.Loggers
             {
                 return new xyDefaultExceptionFormatter().FormatExceptionDetails(ex, information, level, callerName, callerFile, callerLine);
             }
-            return _excFormatter.FormatExceptionDetails(ex, information, level, callerName);                     
+            return _excFormatter.FormatExceptionDetails(ex, information, level, callerName, callerFile, callerLine);                     
         }
 
         /// <summary>
