@@ -618,7 +618,7 @@ namespace xyMessageFactory.Factories
 
             public string LoginTimeout(int seconds) => $"Login process timed out after {seconds} seconds.";
 
-            public string LoginUnexpected(Exception ex) => $"Unexpected error during login: {xyLogFormatter.FormatExceptionDetails(ex, LogLevel.Warning)}";
+            public string LoginUnexpected(Exception ex) => $"Unexpected error during login: {new xyDefaultExceptionFormatter().FormatExceptionDetails(ex, "",LogLevel.Warning)}";
 
             #endregion
 
