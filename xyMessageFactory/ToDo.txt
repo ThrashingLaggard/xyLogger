@@ -1,6 +1,0 @@
-# ToDo
-
-- Mapping the new properties (Entity stuff still open)
-- Check the other proposed additions
-- Complete CI/CD ?
-- Delete from xyToolz
