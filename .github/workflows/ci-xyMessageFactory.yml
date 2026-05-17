@@ -183,7 +183,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.4) Restore dependencies
         id: restore
-        run: dotnet restore xyLogger/xyMessageFactory.csproj
+        run: dotnet restore xyMessageFactory/xyMessageFactory.csproj
 
       # ----------------------------------------------------------------------------
       # B.5) COMPUTE NEXT SEMVER (PLAN ONLY, DO NOT PERSIST)
@@ -246,7 +246,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.6) Build (Release)
         id: build
-        run: dotnet build xyLogger/xyMessageFactory.csproj --configuration Release --no-restore
+        run: dotnet build xyMessageFactory/xyMessageFactory.csproj --configuration Release --no-restore
 
       # ----------------------------------------------------------------------------
       # B.7) TEST
@@ -254,7 +254,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.7) Test
         id: test
-        run: dotnet test xyLogger/xyMessageFactory.csproj --no-build --verbosity detailed
+        run: dotnet test xyMessageFactory/xyMessageFactory.csproj --no-build --verbosity detailed
 
       # ----------------------------------------------------------------------------
       # B.8) PACK
@@ -263,7 +263,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.8) Pack (.nupkg to ./out)
         id: pack
-        run: dotnet pack xyLogger/xyMessageFactory.csproj --configuration Release --no-build -o out -p:PackageVersion=${{ env.version }}
+        run: dotnet pack xyMessageFactory/xyMessageFactory.csproj --configuration Release --no-build -o out -p:PackageVersion=${{ env.version }}
 
       # ----------------------------------------------------------------------------
       # B.9) CHECK IF VERSION EXISTS ON NUGET
@@ -324,13 +324,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyLogger/xyMessageFactory.csproj
+          sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyMessageFactory/xyMessageFactory.csproj
 
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git pull --ff-only origin master
-          git add xyLogger/xyMessageFactory.csproj
+          git add xyMessageFactory/xyMessageFactory.csproj
 
           if git diff --cached --quiet; then
             echo "No version change to commit."
