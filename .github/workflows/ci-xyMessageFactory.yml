@@ -1,4 +1,4 @@
-name: CI/CD for xyLogger
+name: CI/CD for xyMessageFactory
 
 # ==================================================================================
 # 0) TRIGGER
@@ -183,7 +183,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.4) Restore dependencies
         id: restore
-        run: dotnet restore xyLogger/xyLogger.csproj
+        run: dotnet restore xyLogger/xyMessageFactory.csproj
 
       # ----------------------------------------------------------------------------
       # B.5) COMPUTE NEXT SEMVER (PLAN ONLY, DO NOT PERSIST)
@@ -197,7 +197,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          current_version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyLogger/xyLogger.csproj)
+          current_version=$(grep -oPm1 "(?<=<PackageVersion>)[^<]+" xyLogger/xyMessageFactory.csproj)
           echo "Current version: $current_version"
 
           major=$(echo "$current_version" | cut -d. -f1)
@@ -246,7 +246,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.6) Build (Release)
         id: build
-        run: dotnet build xyLogger/xyLogger.csproj --configuration Release --no-restore
+        run: dotnet build xyLogger/xyMessageFactory.csproj --configuration Release --no-restore
 
       # ----------------------------------------------------------------------------
       # B.7) TEST
@@ -254,7 +254,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.7) Test
         id: test
-        run: dotnet test xyLogger/xyLogger.csproj --no-build --verbosity detailed
+        run: dotnet test xyLogger/xyMessageFactory.csproj --no-build --verbosity detailed
 
       # ----------------------------------------------------------------------------
       # B.8) PACK
@@ -263,7 +263,7 @@ jobs:
       # ----------------------------------------------------------------------------
       - name: B.8) Pack (.nupkg to ./out)
         id: pack
-        run: dotnet pack xyLogger/xyLogger.csproj --configuration Release --no-build -o out -p:PackageVersion=${{ env.version }}
+        run: dotnet pack xyLogger/xyMessageFactory.csproj --configuration Release --no-build -o out -p:PackageVersion=${{ env.version }}
 
       # ----------------------------------------------------------------------------
       # B.9) CHECK IF VERSION EXISTS ON NUGET
@@ -280,7 +280,7 @@ jobs:
           echo "Checking NuGet for version: $version"
 
           content_type=$(curl -sI -o /dev/null -w "%{content_type}" \
-            "https://api.nuget.org/v3-flatcontainer/xylogger/$version/xylogger.$version.nupkg")
+            "https://api.nuget.org/v3-flatcontainer/xymessagefactory/$version/xymessagefactory.$version.nupkg")
 
           if [[ "$content_type" == "application/octet-stream" ]]; then
             echo "Package version $version already exists. Skipping publish."
@@ -301,7 +301,7 @@ jobs:
         run: >
           dotnet nuget push out/*.nupkg
           --source https://api.nuget.org/v3/index.json
-          --api-key ${{ secrets.LOGGERLOCK }}
+          --api-key ${{ secrets.MESSAGELOCK }}
           --skip-duplicate
 
       # ----------------------------------------------------------------------------
@@ -324,13 +324,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyLogger/xyLogger.csproj
+          sed -i "s/<PackageVersion>.*<\/PackageVersion>/<PackageVersion>${{ env.version }}<\/PackageVersion>/" xyLogger/xyMessageFactory.csproj
 
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git pull --ff-only origin master
-          git add xyLogger/xyLogger.csproj
+          git add xyLogger/xyMessageFactory.csproj
 
           if git diff --cached --quiet; then
             echo "No version change to commit."
