@@ -4,11 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml.Linq;
-using xyLogger.Helpers;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+
 using xyMessageFactory.Messages;
-using xyLogger.Helpers.Formatters;
+
 
 namespace xyMessageFactory.Factories
 {
@@ -618,7 +616,7 @@ namespace xyMessageFactory.Factories
 
             public string LoginTimeout(int seconds) => $"Login process timed out after {seconds} seconds.";
 
-            public string LoginUnexpected(Exception ex) => $"Unexpected error during login: {new xyDefaultExceptionFormatter().FormatExceptionDetails(ex, "",LogLevel.Warning)}";
+            public string LoginUnexpected(Exception ex) => $"Unexpected error during login: {ex.Message}";
 
             #endregion
 

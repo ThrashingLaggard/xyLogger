@@ -30,9 +30,9 @@ namespace xyLogger.Helpers.Formatters
                 string timestamp = DateTime.Now.ToString();
                 string message = logEntry.Message;
                 Exception? exception = logEntry.Exception?? default;
-                string calllerInfo = logEntry.CallerFile + "-" + callerName ?? "" + logEntry.CallerLine;
+                string callerInfo = logEntry.CallerFile + "-" + (callerName ?? "") + logEntry.CallerLine;
 
-                string formattedMessage = $"[{ID}{timestamp}] [{level+""}] \n[{calllerInfo}] \n[{source}] \n{description}\n{comment}\n{message}\n";
+                string formattedMessage = $"[{ID}{timestamp}] [{level+""}] \n[{callerInfo}] \n[{source}] \n{description}\n{comment}\n{message}\n";
                 
                 if(exception is not null)
                 {

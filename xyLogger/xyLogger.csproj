@@ -4,16 +4,16 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>Logging lib with little static logger for quick usage and ILogger integration for production</Description>
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <NeutralLanguage>en-150</NeutralLanguage>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Authors>ThrashingLaggard</Authors>
     <Company>$(Authors) Industries</Company>
     <PackageVersion>1.0.1</PackageVersion>
+    <Description>Logging lib with little static logger for quick usage and ILogger integration for production</Description>
   </PropertyGroup>
 
   <ItemGroup>

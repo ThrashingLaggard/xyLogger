@@ -27,7 +27,7 @@ namespace xyLogger.Helpers.Formatters
         {
             StringBuilder sb_Builder = new();
 
-            sb_Builder.Append($"{DateTime.Now} [{callerName ?? " / "}] [{level}] ");
+            sb_Builder.Append($"{DateTime.Now} [{callerName ?? " / "}] [{callerLine}][{callerFile}][{level}] ");
 
             if (!string.IsNullOrWhiteSpace(message))
             {

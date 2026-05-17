@@ -173,9 +173,9 @@ namespace xyLogger.Loggers
         /// <remarks>The exact format of the returned string is determined by the underlying formatter
         /// implementation.</remarks>
         /// <returns>A formatted string that includes the provided message, and optionally the caller name and log level.</returns>
-        private string FormatMsg(string message, out xyDefaultLogEntry logEntry, DateTime? timestamp = null, uint? id = null, string? description = null, string? comment = null,  LogLevel? level = LogLevel.Debug, string? callerName = null, string? callerFile = null, int? callerLine = null)
+        private string FormatMsg(string message, out xyDefaultLogEntry logEntry, DateTime? timestamp = null, uint? id = null, string? description = null, string? comment = null,  LogLevel? level = LogLevel.Debug, string? callerName = null, string? callerFile = null, int callerLine = 0)
         {
-            logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null);
+            logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null, callerFile, callerLine);
 
             if (MessageFormatter is not null)
             {
@@ -258,7 +258,7 @@ namespace xyLogger.Loggers
             else    // fallback for  DI fails
             {
                 xyDefaultLogEntryFormatter<T> formatter = new();
-                return formatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception);
+                return formatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception, callerFile, callerLine);
             }
         }
 

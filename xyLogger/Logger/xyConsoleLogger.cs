@@ -112,9 +112,9 @@ namespace xyLogger.Loggers
         /// <remarks>The exact format of the returned string is determined by the underlying formatter
         /// implementation.</remarks>
         /// <returns>A formatted string that includes the provided message, and optionally the caller name and log level.</returns>
-        private string FormatMsg(string message, out xyDefaultLogEntry logEntry,DateTime? timestamp = null,uint? id = null,string? description = null, string? comment = null, LogLevel? level = LogLevel.Debug, string ? callerName = null, string? callerFile = null, int? callerLine = null)
+        private string FormatMsg(string message, out xyDefaultLogEntry logEntry,DateTime? timestamp = null,uint? id = null,string? description = null, string? comment = null, LogLevel? level = LogLevel.Debug, string ? callerName = null, string? callerFile = null, int callerLine = 0)
         {
-            logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null);
+            logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null, callerFile, callerLine);
 
             if (_msgFormatter is not null)
             {
@@ -138,9 +138,9 @@ namespace xyLogger.Loggers
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
         /// <returns></returns>
-        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null,string? callerName = null, string? callerFile = null, int? callerLine = null)
+        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null,string? callerName = null, string? callerFile = null, int callerLine = 0)
         {
-            excEntry = FormatIntoExceptionEntry(ex, information);
+            excEntry = FormatIntoExceptionEntry(ex, information, callerFile, callerLine);
 
             if(_excFormatter is null)
             {
@@ -180,17 +180,19 @@ namespace xyLogger.Loggers
         /// <param name="description"></param>
         /// <param name="comment"></param>
         /// <param name="exception"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null)
+        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
         {
             if (_logEntryFormatter is not null)
             {
-                return _logEntryFormatter.PackAndFormatIntoEntity(source, level, message, timestamp, id,description,comment,exception);
+                return _logEntryFormatter.PackAndFormatIntoEntity(source, level, message, timestamp, id,description,comment,exception, callerFile, callerLine);
             }
             else    // fallback for when DI fails
             {
                 xyDefaultLogEntryFormatter<T> formatter = new();
-                return formatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception);
+                return formatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception, callerFile,callerLine);
             }
         }
 
@@ -199,11 +201,13 @@ namespace xyLogger.Loggers
         /// </summary>
         /// <param name="exception"></param>
         /// <param name="information"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null)
+        public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null, string? callerFile = null, int callerLine = 0)
         {
             _excEntryFormatter ??= new xyDefaultExceptionEntryFormatter();
-            return _excEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information);
+            return _excEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information,null,null,callerFile, callerLine);
         }
 
         /// <summary>
