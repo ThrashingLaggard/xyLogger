@@ -2,8 +2,7 @@
 public enum xyLogTargets
 {
     StandardSystemConsole = 0,
-    OwnDebugConsole = 1,
+    File =1,
     RemoteServer = 2,
-    Elsewhere = 3,
-    Everywhere = 4
+    Elsewhere = 3
 }

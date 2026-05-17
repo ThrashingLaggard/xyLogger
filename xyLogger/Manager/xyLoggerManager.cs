@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 using  xyLogger.Helpers.Formatters;
 using xyLogger.Interfaces;
 
@@ -9,7 +10,7 @@ namespace xyLogger.Managers
     /// 
     ///                                                                                                                  Stuff for Eventhandlers is planned!
     /// </summary>
-    public class xyLoggerManager 
+    public class xyLoggerManager : ILoggerManager
     {
         /// <summary>
         /// Add useful information
@@ -18,7 +19,7 @@ namespace xyLogger.Managers
 
         public ushort Count { get; private set; }
         
-        private readonly IEnumerable<ILogging> _loggers;
+        private readonly IList<ILogging> _loggers;
 
         /// <summary>
         /// 
@@ -45,7 +46,7 @@ namespace xyLogger.Managers
                 }
                 else
                 {
-                    _loggers.Append(logger);
+                   _loggers.Add(logger);
                     Count++;
                 }
             }
@@ -53,15 +54,12 @@ namespace xyLogger.Managers
 
         private string OutputMissingLogger(ILogging logger)
         {
-            xyDefaultLogFormatter formatter = new();
+            xyDefaultMessageFormatter formatter = new();
 
             string output = $"{logger} is null!";
             string formatted = formatter.FormatMessageForLogging(output);
-            string exception = formatter.FormatExceptionDetails(new ArgumentNullException(nameof(logger)), LogLevel.Error);
-            
-            output = formatted + "\n" + exception;
-
-            return output;
+            string exception = new xyDefaultExceptionFormatter().FormatExceptionDetails(new ArgumentNullException(nameof(logger)), formatted,LogLevel.Error);
+            return exception;
         }
 
 
@@ -74,8 +72,8 @@ namespace xyLogger.Managers
         /// <param name="target">The logger instance to be unregistered. Must not be null.</param>
         public void UnregisterLogger(ILogging target) 
         {
-            _loggers.ToList().Remove(target);
-            Count--;
+            if (_loggers.Remove(target))
+                Count--;
         }
 
 
@@ -86,11 +84,14 @@ namespace xyLogger.Managers
         /// one. Ensure that at least one logger is configured to avoid the message being discarded.</remarks>
         /// <param name="message">The message to log. Cannot be null or empty.</param>
         /// <param name="level">The severity level of the log message. Defaults to <see cref="LogLevel.Debug"/> if not specified.</param>
-        public void Log(string message, LogLevel level = LogLevel.Debug)
+        /// <param name="callerName"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        public void Log(string message, LogLevel level = LogLevel.Debug, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
             foreach (ILogging logger in _loggers)
             {
-                logger.Log(message, level);
+                logger.Log(message, level, callerName, callerFile, callerLine);
             }
         }
 
@@ -99,16 +100,23 @@ namespace xyLogger.Managers
         /// Logs the specified exception at the given log level using all registered loggers.
         /// </summary>
         /// <param name="ex">The exception to log. Cannot be <see langword="null"/>.</param>
+        /// <param name="message"></param>
         /// <param name="level">The severity level of the log entry. Defaults to <see cref="LogLevel.Error"/>.</param>
-        public void ExLog(Exception ex, LogLevel level = LogLevel.Error)
+        /// <param name="callerName"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        public void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
             foreach (ILogging logger in _loggers)
             {
-                logger.ExLog(ex, level);
+                logger.ExLog(ex, message, level, callerName, callerFile, callerLine);
             }
         }
 
      
-
+        public void Shutdown()
+        {
+            foreach (ILogging logger in _loggers) logger.Shutdown();
+        }
     }
 }

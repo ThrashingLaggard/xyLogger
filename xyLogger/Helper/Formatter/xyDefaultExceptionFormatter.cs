@@ -20,8 +20,10 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="level"></param>
         /// <param name="message"></param>
         /// <param name="callerName"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        public string FormatExceptionDetails(Exception ex, LogLevel level, string? message = null,string? callerName = null)
+        public string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null,  string? callerFile = null, int? callerLine = null)
         {
             StringBuilder sb_Builder = new();
 
@@ -52,10 +54,11 @@ namespace xyLogger.Helpers.Formatters
             if (ex.InnerException != null)
             {
                 sb_Builder.AppendLine("Inner Exception Details:");
-                sb_Builder.AppendLine(FormatExceptionDetails(ex.InnerException, level));
+                sb_Builder.AppendLine(FormatExceptionDetails(ex.InnerException, "", level));
             }
 
             return sb_Builder.ToString();
         }
     }
 }
+

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 namespace xyLogger.Interfaces
 {
     /// <summary>
-    /// Interface for my own loggers
+    /// Interface for my own loggers like the console or the async logger
     /// </summary>
     public interface ILogging
     {
@@ -14,7 +14,9 @@ namespace xyLogger.Interfaces
         /// <param name="message"></param>
         /// <param name="level"></param>
         /// <param name="callerName"></param>
-        void Log(string message, LogLevel level, [CallerMemberName] string? callerName = null);
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        void Log(string message, LogLevel level, [CallerMemberName] string? callerName = null,[CallerFilePath]   string? callerFile = null, [CallerLineNumber] int callerLine = 0);
         /// <summary>
         /// Write an exception
         /// </summary>
@@ -22,7 +24,9 @@ namespace xyLogger.Interfaces
         /// <param name="level"></param>
         /// <param name="message"></param>
         /// <param name="callerName"></param>
-        void ExLog(Exception ex, LogLevel level, string? message = null, [CallerMemberName] string? callerName = null);
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0);
 
         /// <summary>
         /// Set reference to null

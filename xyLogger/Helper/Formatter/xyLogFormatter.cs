@@ -76,7 +76,7 @@ namespace xyLogger.Helpers.Formatters
             if (depth > MaxDepth)
             {
                 sb.AppendLine("### Safety break!!! ###");
-                sb.AppendLine("The depth of ").Append(MaxDepth).AppendLine(" Exceptions has been exceeded. Please seek help from a better programmer!");
+                sb.Append("The depth of ").Append(MaxDepth).AppendLine(" Exceptions has been exceeded. Please seek help from a better programmer!");
                 return;
             }
 

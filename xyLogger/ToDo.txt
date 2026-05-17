@@ -1,0 +1,7 @@
+# ToDo
+
+- Mapping the new properties 
+- Check the other proposed additions
+- Upload to NuGet
+- Complete CI/CD
+- Delete from xyToolz

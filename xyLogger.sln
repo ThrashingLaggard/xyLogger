@@ -1,17 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36408.4
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11806.211 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xyLogger", "xyLogger\xyLogger.csproj", "{7E8916B1-30C3-44C2-AEF0-222D813C04D1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Interfaces", "Interfaces", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Factorys", "Factorys", "{DA2D3E85-1601-43E4-9FDF-E1E2D13B8E62}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "xyMessageFactory", "xyMessageFactory\xyMessageFactory.csproj", "{3434AE87-B19F-4577-B65A-29ECF54B8069}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Helper", "Helper", "{88FA7F6A-97FC-40D5-90F8-B50637393784}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -14,6 +14,6 @@ namespace xyLogger.Interfaces
         /// <param name="callerName"></param>
         /// <param name="level"></param>
         /// <returns></returns>
-        string FormatMessageForLogging(string message, string? callerName = null, LogLevel? level = null);
+        string FormatMessageForLogging(string message, LogLevel? level = null, string ? callerName = null, string? callerFile = null, int? callerLine = null);
     }
 }

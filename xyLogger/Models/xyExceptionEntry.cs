@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Reflection;
+using xyLogger.Interfaces;
 
 namespace xyLogger.Models
 {
-    public class xyExceptionEntry
+    public class xyExceptionEntry : IEntry
     {
         /// <summary>
         /// For easy administration
@@ -18,7 +19,7 @@ namespace xyLogger.Models
         /// <summary>
         /// The inner exception
         /// </summary>
-        public Exception InnerException { get; init; }
+        public Exception? InnerException { get; init; }
 
         /// <summary>
         /// What kind of exception does this?
@@ -33,17 +34,17 @@ namespace xyLogger.Models
         /// <summary>
         /// The root of the problem
         /// </summary>
-        public  string Source { get; init; }
+        public  string? Source { get; init; }
 
         /// <summary>
         /// Show the frames on the call stack
         /// </summary>
-        public string StrackTrace { get; init; }
+        public string? StackTrace { get; init; }
 
         /// <summary>
         /// Where did it happen
         /// </summary>
-        public MethodBase TargetSite { get; init; }
+        public MethodBase? TargetSite { get; init; }
 
         /// <summary>
         /// The message embedded in the exception
@@ -58,7 +59,7 @@ namespace xyLogger.Models
         /// <summary>
         /// Space for additional data
         /// </summary>
-        public IDictionary CustomData { get; set; }
+        public IDictionary? CustomData { get; set; }
 
 
         public xyExceptionEntry(Exception exception_)
@@ -68,7 +69,7 @@ namespace xyLogger.Models
             TypeOfException = exception_.GetType();
             Timestamp = DateTime.Now;
             Source = exception_.Source ?? default!;
-            StrackTrace = exception_.StackTrace ?? default!;
+            StackTrace = exception_.StackTrace ?? default!;
             TargetSite = exception_.TargetSite ?? default!;
             Message = exception_.Message;
             CustomData = exception_.Data;

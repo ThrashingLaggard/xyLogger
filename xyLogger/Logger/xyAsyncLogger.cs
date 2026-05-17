@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using xyLogger.Enums;
 using xyLogger.Helpers.Formatters;
 using xyLogger.Interfaces;
 using xyLogger.Models;
@@ -18,28 +19,45 @@ namespace xyLogger.Loggers
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Benennungsstile", Justification = "<This is the way>")]
     public class xyAsyncLogger<T> : ILogging, IDisposable
     {
-        private readonly BlockingCollection<string> _logQueue = [];
-        private readonly CancellationTokenSource _cts = new();
         private readonly Task _worker;
         private readonly StreamWriter _writer;
+        private readonly IReadOnlyList<xyLogTargets> _targets;
+        private readonly CancellationTokenSource _cts = new();
+        private readonly BlockingCollection<string> _logQueue = [];
+        private readonly List<IEntry> _entries = [];
+        private readonly object _entriesLock = new();
+
+        public IReadOnlyList<IEntry> GetEntries() { lock (_entriesLock) return _entries.ToList(); }
+        public IEnumerable<xyDefaultLogEntry> GetMessageEntries() => GetEntries().OfType<xyDefaultLogEntry>();
+        public IEnumerable<xyExceptionEntry> GetExceptionEntries() => GetEntries().OfType<xyExceptionEntry>();
 
         public IMessageFormatter? MessageFormatter { get; set; }
         public IExceptionFormatter? ExceptionFormatter { get; set; }
         public IMessageEntityFormatter<T>? MessageEntryFormatter { get; set; } 
         public IExceptionEntityFormatter? ExceptionEntryFormatter { get; set; }
 
-        public xyAsyncLogger(string? filepath= null,IMessageFormatter? messageFormatter_ =null, IExceptionFormatter? exceptionFormatter_ = null, IMessageEntityFormatter<T>? messageEntryFormatter_ = null, IExceptionEntityFormatter? exceptionEntryFormatter_ = null)
+        public xyAsyncLogger(string? filepath= null, IEnumerable<xyLogTargets>? logTargets = null, IMessageFormatter? messageFormatter_ =null, IExceptionFormatter? exceptionFormatter_ = null, IMessageEntityFormatter<T>? messageEntryFormatter_ = null, IExceptionEntityFormatter? exceptionEntryFormatter_ = null)
         {
-            MessageFormatter = messageFormatter_?? default;
-            ExceptionFormatter = exceptionFormatter_ ?? default;
-            ExceptionEntryFormatter = exceptionEntryFormatter_ ?? default;
-            MessageEntryFormatter = messageEntryFormatter_ ?? default;
+            MessageFormatter = messageFormatter_?? new xyDefaultMessageFormatter();
+            ExceptionFormatter = exceptionFormatter_ ?? new xyDefaultExceptionFormatter();
+            ExceptionEntryFormatter = exceptionEntryFormatter_ ?? new xyDefaultExceptionEntryFormatter();
+            MessageEntryFormatter = messageEntryFormatter_ ?? new xyDefaultLogEntryFormatter<T>();
+
+            if (string.IsNullOrEmpty(filepath))
+            {
+
+                string parent = Directory.GetParent(Environment.CurrentDirectory)?.FullName
+                 ?? Environment.CurrentDirectory;
+
+                filepath = Path.Combine(parent, "logs", "app.log"); // kein führendes /
+
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(filepath)!);
+
+            _targets = logTargets?.ToList()?? [xyLogTargets.StandardSystemConsole];
 
             // Setup the writer
-            _writer = new(filepath!, true) 
-            {
-                AutoFlush = true,
-            };
+            _writer = _targets.Contains(xyLogTargets.File)? new(filepath!, true) {AutoFlush = true,}:StreamWriter.Null;
 
             // Starting the asynchronous work
             _worker = Task.Run(() => ProcessQueue(), _cts.Token);
@@ -50,10 +68,13 @@ namespace xyLogger.Loggers
         /// <param name="message"></param>
         /// <param name="level"></param>
         /// <param name="callerName"></param>
-        public void Log(string message, LogLevel level, [CallerMemberName] string? callerName = null)
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        public void Log(string message, LogLevel level, [CallerMemberName] string? callerName = null, [CallerFilePath]string? callerFile = null, [CallerLineNumber]int callerLine = 0)
         {
             // xyDefaultLogEntry? logEntry = default;
-            string formattedMsg = FormatMsg(message, out _, DateTime.Now, null, null, null, callerName, level);// 
+            string formattedMsg = FormatMsg(message, out xyDefaultLogEntry entry, DateTime.Now, null, null, null,level, callerName, callerFile, callerLine );// 
+            lock (_entriesLock) _entries.Add(entry);
             Enqueue(formattedMsg, callerName);
         }
 
@@ -64,11 +85,13 @@ namespace xyLogger.Loggers
         /// <param name="level"></param>
         /// <param name="message">Optional: additional informationen</param>
         /// <param name="callerName"></param>
-        public void ExLog(Exception ex, LogLevel level, string? message = null, [CallerMemberName] string? callerName = null)
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        public void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
             //xyExceptionEntry? excEntry =  default;
-            string exMessage = FormatEx(ex, level, out _, message, callerName);
-
+            string exMessage = FormatEx(ex, level, out xyExceptionEntry  entry, message, callerName, callerFile, callerLine);
+            lock (_entriesLock) _entries.Add(entry);
             Enqueue(exMessage, callerName);
         }
 
@@ -86,7 +109,8 @@ namespace xyLogger.Loggers
             }
             catch(Exception ex)
             {
-                Console.WriteLine(ExceptionFormatter?.FormatExceptionDetails(ex,LogLevel.Error,callerName));
+                if (ExceptionFormatter is null) ExceptionFormatter = new xyDefaultExceptionFormatter();
+                Console.WriteLine(ExceptionFormatter.FormatExceptionDetails(ex,message,LogLevel.Error,callerName));
                 Console.Out.Flush();
             }
         }
@@ -103,9 +127,11 @@ namespace xyLogger.Loggers
                     await WriteToTarget(message);
                 }
             }
-            catch(Exception ex)
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
             {
-                Console.WriteLine(ExceptionFormatter?.FormatExceptionDetails(ex, LogLevel.Error));
+                if (ExceptionFormatter is null) ExceptionFormatter = new xyDefaultExceptionFormatter();
+                Console.WriteLine(ExceptionFormatter.FormatExceptionDetails(ex,"An error occured while processing the message queue" ,LogLevel.Error));
                 await Console.Out.FlushAsync();
             }
         }
@@ -116,20 +142,30 @@ namespace xyLogger.Loggers
         /// <param name="message"></param>
         /// <param name="logTargets"></param>
         /// <returns></returns>
-        private async Task WriteToTarget(string message, params int[] logTargets)
+        private async Task WriteToTarget(string message)
         {
-            if (logTargets.Contains(0))
+            if (_targets.Contains(xyLogTargets.StandardSystemConsole))
             {
                 Console.WriteLine(message);
                 await Console.Out.FlushAsync();
             }
-            else if(logTargets.Contains(1))
+            if (_targets.Contains(xyLogTargets.File)) 
             {
                 await _writer.WriteLineAsync(message);
             }
+            if (_targets.Contains(xyLogTargets.RemoteServer))
+            {
+                await xyLog.AsxLog("Logging to a remote server is not yet implemented, please wait a minute!");
+
+                // I shall find out what to implement here eventually
+            }
+            if (_targets.Contains(xyLogTargets.Elsewhere))
+            {
+                // Yes yes, what do i do here?
+            }
         }
 
-
+        #region "Formatting"
 
         /// <summary>
         /// Formats a log message with optional caller information and log level.
@@ -137,17 +173,17 @@ namespace xyLogger.Loggers
         /// <remarks>The exact format of the returned string is determined by the underlying formatter
         /// implementation.</remarks>
         /// <returns>A formatted string that includes the provided message, and optionally the caller name and log level.</returns>
-        private string FormatMsg(string message, out xyDefaultLogEntry logEntry, DateTime? timestamp = null, uint? id = null, string? description = null, string? comment = null, string? callerName = null, LogLevel? level = LogLevel.Debug)
+        private string FormatMsg(string message, out xyDefaultLogEntry logEntry, DateTime? timestamp = null, uint? id = null, string? description = null, string? comment = null,  LogLevel? level = LogLevel.Debug, string? callerName = null, string? callerFile = null, int? callerLine = null)
         {
             logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null);
 
             if (MessageFormatter is not null)
             {
-                return MessageFormatter.FormatMessageForLogging(message, callerName, level);
+                return MessageFormatter.FormatMessageForLogging(message, level, callerName, callerFile, callerLine);
             }
             else
             {
-                string outputMessage = new xyDefaultLogFormatter().FormatMessageForLogging(message, callerName, level);
+                string outputMessage = new xyDefaultMessageFormatter().FormatMessageForLogging(message, level, callerName, callerFile, callerLine);
                 return outputMessage;
             }
         }
@@ -160,18 +196,21 @@ namespace xyLogger.Loggers
         /// <param name="excEntry"></param>
         /// <param name="information"></param>
         /// <param name="callerName"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null, string? callerName = null)
+        private string FormatEx(Exception ex, LogLevel level, out xyExceptionEntry excEntry, string? information = null, string? callerName = null, string? callerFile = null, int? callerLine = null)
         {
             excEntry = FormatIntoExceptionEntry(ex, information);
 
             if (ExceptionFormatter is not null)
             {
-                return ExceptionFormatter.FormatExceptionDetails(ex, level, callerName);
+                return ExceptionFormatter.FormatExceptionDetails(ex, information, level, callerName, callerFile, callerLine);
             }
             else
             {
-                string outputMessage = new xyDefaultExceptionFormatter().FormatExceptionDetails(ex, level, callerName);
+                if (ExceptionFormatter is null) ExceptionFormatter = new xyDefaultExceptionFormatter();
+                string outputMessage = ExceptionFormatter.FormatExceptionDetails(ex,information ,level, callerName, callerFile, callerLine);
                 return outputMessage;
             }
         }
@@ -214,7 +253,7 @@ namespace xyLogger.Loggers
             {
                 return MessageEntryFormatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception);
             }
-            else    // fallback for when DI fails
+            else    // fallback for  DI fails
             {
                 xyDefaultLogEntryFormatter<T> formatter = new();
                 return formatter.PackAndFormatIntoEntity(source, level, message, timestamp, id, description, comment, exception);
@@ -229,31 +268,27 @@ namespace xyLogger.Loggers
         /// <returns></returns>
         public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null)
         {
-            try
-            {
-                return ExceptionEntryFormatter!.PackAndFormatIntoEntity(exception, DateTime.Now, information);
-            }
-            catch (Exception ex)
-            {
-                xyExceptionEntry exEntry = new(ex)
-                {
-                    Exception = ex,
-                    Timestamp = DateTime.Now,
-                    Message = "Fallback solution!!! There seems to be no ExceptionEntry formatter at work!",
-                };
-                return exEntry;
-            }
+            ExceptionEntryFormatter ??= new xyDefaultExceptionEntryFormatter();
+            return ExceptionEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information);
         }
+
+        #endregion
 
         /// <summary>
         /// 
         /// </summary>
+        //public void Shutdown()
+        //{
+        //    _logQueue.CompleteAdding();
+        //    _cts.Cancel();
+        //    _worker.Wait();
+        //}
         public void Shutdown()
         {
             _logQueue.CompleteAdding();
-            _cts.Cancel();
-            _worker.Wait();
-        }
+            try { _worker.Wait(TimeSpan.FromSeconds(5)); }
+            catch (AggregateException ex) when (ex.InnerExceptions.All(e => e is OperationCanceledException)) { }
+         }
 
         /// <summary>
         /// 

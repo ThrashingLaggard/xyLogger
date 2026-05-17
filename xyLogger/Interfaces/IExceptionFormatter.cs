@@ -14,7 +14,9 @@ namespace xyLogger.Interfaces
         /// <param name="level"></param>
         /// <param name="message"></param>
         /// <param name="callerName"></param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns></returns>
-        string FormatExceptionDetails(Exception ex, LogLevel level, string? message = null, string? callerName = null);
+        string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null, string? callerFile = null, int? callerLine = null);
     }
 }

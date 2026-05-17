@@ -81,12 +81,20 @@ namespace xyLogger.Loggers
         }
 
         // Default configuration and internal state
-        private static readonly string _logFilePath = "logs/app.log";
-        private static readonly string _exLogFilePath = "logs/exceptions.log";
+        private static string _logFilePath = "logs/app.log";
+        private static string _exLogFilePath = "logs/exceptions.log";
         private static readonly long _maxLogFileSize = 10485760;
         private static readonly object _threadSafetyLock = new();
         private readonly static xyLogArchiver _archiver = new(_maxLogFileSize);
         // private static IEnumerable<xyLogTargets> _eTargets = new List<xyLogTargets>();
+
+
+        public static void Configure(string logDir = "logs")
+        {
+            _logFilePath = Path.Combine(logDir, "app.log");
+            _exLogFilePath = Path.Combine(logDir, "exceptions.log");
+            Directory.CreateDirectory(logDir);
+        }
 
         /// <summary>
         /// Converts an array of raw numeric target identifiers into the corresponding <see cref="xyLogTargets"/> enum values.
@@ -98,7 +106,7 @@ namespace xyLogger.Loggers
         /// An enumerable of <see cref="xyLogTargets"/> values; 
         /// an empty array if <paramref name="logTargets"/> contains no elements.
         /// </returns>
-        internal static IEnumerable<xyLogTargets> SetLogTargets(ushort[] logTargets)
+        public static IEnumerable<xyLogTargets> SetLogTargets(ushort[] logTargets)
         {
             if (logTargets.Length < 1) return [];
             xyLogTargets[] targets = new xyLogTargets[logTargets.Length];
@@ -439,13 +447,15 @@ namespace xyLogger.Loggers
             try
             {
                 if (string.IsNullOrWhiteSpace(actionName))
-                {
-                    ExLog(new ArgumentException(actionName), "ActionName invalid", LogLevel.Error);
-                }
+                    throw new ArgumentException("ActionName invalid.", nameof(actionName));
+
+
 
                 Log(string.Concat("Start: ", actionName));
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 T? result = action();
-
+                sw.Stop();
+                Log($"✓ {actionName} in {sw.ElapsedMilliseconds}ms");
                 Log(result == null || result is IEnumerable<object> enumerable && !enumerable.Any() ?
                     string.Concat("Warnung: ", actionName, " hat keine Ergebnisse geliefert.") :
                     string.Concat("Erfolgreich: ", actionName, " abgeschlossen."));
@@ -483,7 +493,7 @@ namespace xyLogger.Loggers
         /// A task that resolves to the result of <paramref name="action"/>,
         /// or <see langword="default"/> if an exception was thrown.
         /// </returns>
-        public static async Task<T> ExecuteDebuggingAsync<T>(string actionName, Func<T> action, Action<Exception>? logOnError = null)
+        public static async Task<T> ExecuteDebuggingAsync<T>(string actionName, Func<Task<T>> action, Action<Exception>? logOnError = null)
         {
             try
             {
@@ -492,7 +502,7 @@ namespace xyLogger.Loggers
                     await AsxExLog(new ArgumentException("ActionName invalid"), LogLevel.Error);
                 }
                 await AsxLog(string.Concat("Start: ", actionName));
-                T? result = action();
+                T? result = await action();
 
                 await AsxLog(result == null || result is IEnumerable<object> enumerable && !enumerable.Any() ?
                     string.Concat("Warnung: ", actionName, " hat keine Ergebnisse geliefert.") :

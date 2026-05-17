@@ -23,7 +23,7 @@ namespace xyLogger.Helpers.Formatters
             if (entry_ is xyDefaultLogEntry logEntry)
             {
                 uint ID = logEntry.ID;
-                string description ="Info:" +  logEntry.Description ?? "";
+                string description ="Info:" +  (logEntry.Description )?? "";
                 string comment = "Comment:" + logEntry.Comment??"";
                 string source = logEntry.Source;
                 LogLevel level = level_ ?? logEntry.Level;
@@ -35,7 +35,7 @@ namespace xyLogger.Helpers.Formatters
                 
                 if(exception is not null)
                 {
-                    string formattedExceptionInformation = new xyDefaultExceptionFormatter().FormatExceptionDetails(exception,level,callerName);
+                    string formattedExceptionInformation = new xyDefaultExceptionFormatter().FormatExceptionDetails(exception,"", level,callerName);
                     formattedMessage += formattedExceptionInformation;
                 }
                 return formattedMessage;
