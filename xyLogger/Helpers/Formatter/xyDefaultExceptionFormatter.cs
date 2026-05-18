@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using xyLogger.Interfaces;
 
 namespace xyLogger.Helpers.Formatters
@@ -24,47 +19,8 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="callerLine"></param>
         /// <param name="depth"></param>
         /// <returns></returns>
-        public string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null,  string? callerFile = null, int? callerLine = null, int depth = 1)
-        {
-            if (depth > 10)
-            {
-                return $"[InnerException depth {depth} exceeded limit]";
-            }
-
-            StringBuilder sb_Builder = new();
-
-            sb_Builder.AppendLine($"{DateTimeOffset.Now} [{level}] [{callerName ?? " / "}] [{callerLine}][{callerFile}]");
-
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                sb_Builder.AppendLine($"External Message: {message}     \n");
-            }
-
-            sb_Builder.AppendLine("Exception Details:");
-            sb_Builder.AppendLine($"Type: {ex.GetType().Name}");
-            sb_Builder.AppendLine($"Source: {ex.Source}");
-            sb_Builder.AppendLine($"TargetSite: {ex.TargetSite}");
-            sb_Builder.AppendLine($"StackTrace: {ex.StackTrace}");
-            sb_Builder.AppendLine($"HResult: {ex.HResult}");
-            sb_Builder.AppendLine($"Message: {ex.Message}");
-            
-            if (ex.Data != null && ex.Data.Count > 0)
-            {
-                sb_Builder.AppendLine("Custom Data:");
-                foreach (var key in ex.Data.Keys)
-                {
-                    sb_Builder.AppendLine($"  {key}: {ex.Data[key]}");
-                }
-            }
-
-            if (ex.InnerException != null)
-            {
-                sb_Builder.AppendLine("Inner Exception Details:");
-                sb_Builder.AppendLine(FormatExceptionDetails(ex.InnerException, "", level,depth:depth +1));
-            }
-
-            return sb_Builder.ToString();
-        }
+        public string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null, string? callerFile = null, int callerLine = 0, int depth = 1)    =>xyLogFormatter.FormatExceptionDetails(ex, level, message, callerName, callerFile, callerLine, depth);
+        
     }
 }
 

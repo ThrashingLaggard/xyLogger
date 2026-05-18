@@ -165,10 +165,7 @@ namespace xyLogger.Loggers
             catch (Exception ex)
             {
                 ExceptionFormatter ??= new xyDefaultExceptionFormatter();
-                Console.Error.WriteLine(
-                    ExceptionFormatter.FormatExceptionDetails(
-                        ex, "Error in xyAsyncLogger worker queue", LogLevel.Error));
-                await Console.Error.FlushAsync();
+                xyOutput.OutputError(ExceptionFormatter.FormatExceptionDetails(ex, "Error in xyAsyncLogger worker queue", LogLevel.Error));
             }
         }
 
@@ -176,8 +173,7 @@ namespace xyLogger.Loggers
         {
             if (_targets.Contains(xyLogTargets.StandardSystemConsole))
             {
-                Console.WriteLine(formatted);
-                await Console.Out.FlushAsync();
+                await xyOutput.OutputAsync(formatted);
             }
             if (_targets.Contains(xyLogTargets.File))
                 await _writer.WriteLineAsync(formatted);
@@ -213,26 +209,18 @@ namespace xyLogger.Loggers
 
         // ── Entry builders ────────────────────────────────────────────
 
-        private xyDefaultLogEntry BuildMessageEntry(
-            string source, LogLevel level, string message,
-            DateTimeOffset timestamp, string? callerFile, int callerLine,
-            string? messageTemplate = null,
-            IReadOnlyDictionary<string, object?>? properties = null)
+        private xyDefaultLogEntry BuildMessageEntry(string source, LogLevel level, string message,DateTimeOffset timestamp, string? callerFile, int callerLine,string? messageTemplate = null,IReadOnlyDictionary<string, object?>? properties = null)
         {
             return new xyDefaultLogEntry(source, level, message, timestamp, null, callerFile, callerLine)
             {
-                MessageTemplate = messageTemplate ?? string.Empty,
-                Properties = properties ?? new Dictionary<string, object?>(),
+                MessageTemplate = messageTemplate ?? string.Empty,Properties = properties ?? new Dictionary<string, object?>(),
             };
         }
 
-        public xyExceptionEntry FormatIntoExceptionEntry(
-            Exception exception, string? information = null,
-            string? callerFile = null, int callerLine = 0)
+        private xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null,string? callerFile = null, int callerLine = 0)
         {
             ExceptionEntryFormatter ??= new xyDefaultExceptionEntryFormatter();
-            return ExceptionEntryFormatter.PackAndFormatIntoEntity(
-                exception, DateTimeOffset.Now, information, null, null, callerFile, callerLine);
+            return ExceptionEntryFormatter.PackAndFormatIntoEntity(exception, DateTimeOffset.Now, information, null, null, callerFile, callerLine);
         }
 
         // ── Shutdown / Dispose ────────────────────────────────────────

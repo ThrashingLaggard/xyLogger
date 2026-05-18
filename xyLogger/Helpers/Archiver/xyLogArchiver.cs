@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using xyLogger.Loggers;
+﻿using xyLogger.Helpers.Formatters;
 
 namespace xyLogger.Helpers.Archiver
 {
@@ -19,7 +14,7 @@ namespace xyLogger.Helpers.Archiver
         public string FormatForArchive(string filePath)
         {
             string archivePath = $"{filePath}_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.log";
-            xyLog.Log("Formatting for archive: " + archivePath);
+            xyOutput.Output("Formatting for archive: " + archivePath);
             return archivePath;
         }
 
@@ -31,11 +26,11 @@ namespace xyLogger.Helpers.Archiver
                 try
                 {
                     File.Move(filepath_, newPath);
-                    xyLog.Log("Moving the log to archive was successfull");
+                    xyOutput.Output("Moving the log to archive was successfull");
                 }
                 catch (Exception ioEx)
                 {
-                    xyLog.ExLog(ioEx);
+                    xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ioEx));
                 }
             }
         }
@@ -49,12 +44,12 @@ namespace xyLogger.Helpers.Archiver
                 try
                 {
                     await Task.Run(() => File.Move(filepath_, newPath));
-                    xyLog.Log("Moving the log to archive was successfull");
+                    await xyOutput.OutputAsync("Moving the log to archive was successfull");
 
                 }
                 catch (Exception Ex)
                 {
-                    xyLog.ExLog(Ex);
+                    xyOutput.Output(xyLogFormatter.FormatExceptionDetails(Ex));
                 }
             }
         }

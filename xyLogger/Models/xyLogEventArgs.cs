@@ -1,6 +1,4 @@
-﻿using xyLogger.Models;
-
-namespace xyLogger.Models;
+﻿namespace xyLogger.Models;
 
 public sealed class xyLogEventArgs : EventArgs
 {

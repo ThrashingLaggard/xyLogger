@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using xyLogger.Adapters;
 using xyLogger.Enums;
-using xyLogger.Interfaces;
+using xyLogger.Helpers.Formatters;
 using xyLogger.Loggers;
 using xyLogger.Managers;
 
@@ -13,7 +13,7 @@ using xyLogger.Managers;
 //  wiring would look with Microsoft.Extensions.DependencyInjection.
 // ═══════════════════════════════════════════════════════════════════════
 
-namespace xyLogger.Examples
+namespace xyLogger
 {
     internal class Program
     {
@@ -39,7 +39,7 @@ namespace xyLogger.Examples
             Console.WriteLine("--- Example 1: Minimal ---");
 
             // Create logger — defaults handle formatting
-            var consoleLogger = new xyConsoleLogger<Program>();
+            var consoleLogger = new xyConsoleLogger<Program>(new xyDefaultMessageFormatter(), new xyDefaultExceptionFormatter());
 
             // Set up manager and register logger
             var manager = new xyLoggerManager();
@@ -85,7 +85,7 @@ namespace xyLogger.Examples
             Directory.CreateDirectory(logDir);
 
             // Two loggers — Console and File
-            var consoleLogger = new xyConsoleLogger<Program>();
+            var consoleLogger = new xyConsoleLogger<Program>(new xyDefaultMessageFormatter(), new xyDefaultExceptionFormatter());
             var asyncLogger   = new xyAsyncLogger<Program>(
                 filepath:   logFile,
                 logTargets: [xyLogTargets.StandardSystemConsole, xyLogTargets.File]
@@ -141,7 +141,7 @@ namespace xyLogger.Examples
             Console.WriteLine("--- Example 3: Adapter Direction A (ILogging → ILogger<T>) ---");
 
             // Standard setup
-            var consoleLogger = new xyConsoleLogger<ThirdPartyService>();
+            var consoleLogger = new xyConsoleLogger<ThirdPartyService>(new xyDefaultMessageFormatter(), new xyDefaultExceptionFormatter());
             var manager       = new xyLoggerManager();
             manager.RegisterLogger(consoleLogger);
 

@@ -156,6 +156,15 @@ namespace xyLogger.Adapters
         }
 
         /// <inheritdoc/>
+        public void Log(string template, LogLevel level, IReadOnlyDictionary<string, object?> properties, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
+        {
+            if (!_logger.IsEnabled(level)) return;
+
+
+            _logger.Log(level, template, properties);
+        }
+
+        /// <inheritdoc/>
         public void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
             if (!_logger.IsEnabled(level)) return;
@@ -167,6 +176,7 @@ namespace xyLogger.Adapters
         /// their lifecycle is managed by the DI container / application host.
         /// </summary>
         public void Shutdown() { }
+
     }
 
 

@@ -31,6 +31,6 @@ namespace xyLogger.Interfaces
         /// <param name="callerName"></param>
         /// <param name="level"></param>
         /// <returns></returns>
-        string UnpackAndFormatFromEntity<T, TKey, TValue>(T entry_, string? callerName = null, LogLevel? level = LogLevel.Debug) where T : class where TKey : class;
+        string UnpackAndFormatFromEntity<T>(T entry_, string? callerName = null, LogLevel? level = LogLevel.Debug) where T : class;
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Reflection;
 using xyLogger.Interfaces;
-using xyLogger.Loggers;
 using xyLogger.Models;
 
 
@@ -14,40 +13,31 @@ namespace xyLogger.Helpers.Formatters
 
         public xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTimeOffset? timestamp = null,string? message = null,  uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0)
         {
-            xyExceptionEntry entry = new(exception, callerFile, callerLine)
-            {
-                CallerFile = callerFile,
-                CallerLine = callerLine,
-                Exception = exception,
-                Message = message ?? "",
-                Timestamp = timestamp ?? DateTimeOffset.Now,
-                Description = description ?? "",
-            };
-            return entry;
+            return new(exception, callerFile, callerLine);
         }
 
-      
+
 
         /// <inheritdoc/>
-        public string UnpackAndFormatFromEntity<T, TKey, TValue>(T entry_, string? callerName = null, LogLevel? level = LogLevel.Debug)   where T : class where TKey : class
+        public string UnpackAndFormatFromEntity<T>(T entry_, string? callerName = null, LogLevel? level = LogLevel.Debug) where T : class
         {
             if (entry_ is xyExceptionEntry entry)
             {
                 
-                Dictionary<TKey,TValue> dictionary = GetPropertyValuesForTarget<TKey, TValue, T>(entry_);
+                Dictionary<string, object?> dictionary = GetPropertyValuesForTarget<T>(entry_);
                 string properties = Join(dictionary);
                 return properties;
             }
             return "";
         }
 
-        public static PropertyInfo[] GetPropertyInfosForTarget<T>(T obj)
+        private static PropertyInfo[] GetPropertyInfosForTarget<T>(T obj)
         {
             try
             {
                 if (obj is null)
                 {
-                    xyLog.Log("Parameter is Null");
+                    xyOutput.Output("Parameter is Null");
                     return [];
                 }
                 else
@@ -55,39 +45,35 @@ namespace xyLogger.Helpers.Formatters
                     Type type = typeof(T);
                     if (type.GetProperties() is PropertyInfo[] propertyInfos && propertyInfos.Length > 0)
                     {
-                        xyLog.Log($"Successfully read the property infos for {type}");
+                        // Falls mal wieder debuggt werden muss
+                        // xyOutput.Output($"Successfully read the property infos for {type}");
                         return propertyInfos;
                     }
                 }
             }
             catch (Exception ex)
             {
-                xyLog.ExLog(ex);
+                xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ex));
             }
             return [];
         }
 
-        public static Dictionary<TKey, TValue> GetPropertyValuesForTarget<TKey, TValue, T>(T obj) where T : class where TKey : class
+        private static Dictionary<string, object?> GetPropertyValuesForTarget<T>(T obj) where T : class 
         {
+            Dictionary<string, object?> propertyDictionary = [];
             PropertyInfo[] propertyInfos = GetPropertyInfosForTarget(obj);
-
-            Dictionary<TKey, TValue> propertyDictionary = [];
-            TKey key = default!;
-            object? value = default;
-
 
             foreach (PropertyInfo info in propertyInfos)
             {
-                value = info.GetValue(obj);
+                object? value = info.GetValue(obj);
                 if (value is null) continue;
                 try
                 {
-                    key = (TKey)Convert.ChangeType(info.Name, typeof(TKey));
-                    propertyDictionary.Add(key, (TValue)value!);
+                    propertyDictionary.Add(info.Name, value);
                 }
                 catch (Exception ex)
                 {
-                    xyLog.ExLog(ex);
+                    xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ex));
                 }
             }
 

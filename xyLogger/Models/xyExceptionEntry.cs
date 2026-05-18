@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using xyLogger.Interfaces;
 
@@ -64,7 +65,7 @@ namespace xyLogger.Models
         /// </summary>
         public IDictionary? CustomData { get; set; }
 
-
+        [SetsRequiredMembers]
         public xyExceptionEntry(Exception exception_, string? callerFile_ = null, int callerLine_ = 0)
         {
             CallerFile = callerFile_?? "";

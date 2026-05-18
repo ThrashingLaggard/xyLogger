@@ -24,7 +24,7 @@ namespace xyLogger.Helpers.Formatters
             {
                 uint ID = logEntry.ID;
                 string description ="Info:" +  (logEntry.Description ?? "");
-                string comment = "Comment:" + logEntry.Comment??"";
+                string comment = "Comment:" + (logEntry.Comment??"");
                 string source = logEntry.Source;
                 LogLevel level = level_ ?? logEntry.Level;
                 string timestamp = DateTimeOffset.Now.ToString();

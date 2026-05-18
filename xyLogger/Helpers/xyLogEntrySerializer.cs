@@ -2,12 +2,15 @@
 using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Xml.Serialization;
-using xyLogger.Loggers;
+using xyLogger.Helpers.Formatters;
 using xyLogger.Models;
 
 
 namespace xyLogger.Helpers
 {
+    /// <summary>
+    /// Helper class to serialize the custom logentries
+    /// </summary>
     public class xyLogEntrySerializer()
     {
 
@@ -56,10 +59,10 @@ namespace xyLogger.Helpers
             }
             catch (Exception ex)
             {
-                xyLog.ExLog(ex);
+                xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ex));
             }
             string msg = $"An Error occured while trying to serialize {target}";
-            xyLog.Log(msg);
+            xyOutput.Output(msg);
             return msg;
         }
 
@@ -81,22 +84,22 @@ namespace xyLogger.Helpers
                 using StringReader reader = new StringReader(xml);
                 if (deserializer.Deserialize(reader) is T target)
                 {
-                    xyLog.Log($"{target} has been deserialized!");
+                    xyOutput.Output($"{target} has been deserialized!");
                     if (outputTargetInConsole is true)
                     {
-                        xyLog.Log(xml);
+                        xyOutput.Output(xml);
                     }
                     return target;
                 }
                 else
                 {
-                    xyLog.Log($"An error occured while trying to deserialize {nameof(xml)}");
+                    xyOutput.Output($"An error occured while trying to deserialize {nameof(xml)}");
                     throw new SerializationException();
                 }
             }
             catch (Exception ex)
             {
-                xyLog.ExLog(ex);
+                xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ex));
                 return default!;
             }
         }

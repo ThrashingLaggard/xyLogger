@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using xyLogger.Helpers;
 using xyLogger.Interfaces;
 using xyLogger.Models;
 
@@ -56,10 +56,7 @@ namespace xyLogger.Sinks
 
                     if (response.IsSuccessStatusCode) return;
 
-                    Console.Error.WriteLine(
-                        $"[xyHttpSink] POST to {_endpoint} returned " +
-                        $"{(int)response.StatusCode} {response.ReasonPhrase} " +
-                        $"(attempt {attempt + 1}/{MaxRetries + 1})");
+                    xyOutput.OutputError($"[xyHttpSink] POST to {_endpoint} returned {(int)response.StatusCode} {response.ReasonPhrase} (attempt {attempt + 1}/{MaxRetries + 1})");
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
@@ -67,7 +64,7 @@ namespace xyLogger.Sinks
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(
+                    xyOutput.OutputError(
                         $"[xyHttpSink] Failed to send entry " +
                         $"(attempt {attempt + 1}/{MaxRetries + 1}): {ex.Message}");
                 }

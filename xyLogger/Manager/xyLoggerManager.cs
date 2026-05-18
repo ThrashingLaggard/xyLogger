@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using xyLogger.Helpers;
 using xyLogger.Helpers.Formatters;
 using xyLogger.Interfaces;
-using xyLogger.Loggers;
 using xyLogger.Models;
 
 namespace xyLogger.Managers
@@ -57,7 +56,7 @@ namespace xyLogger.Managers
             }
             catch (Exception ex)
             {
-                xyLog.ExLog(ex);
+                xyOutput.Output(xyLogFormatter.FormatExceptionDetails(ex));
             }
         }
 
@@ -146,7 +145,7 @@ namespace xyLogger.Managers
         {
             if (ExLogWritten is null) return;
 
-            xyExceptionEntry excEntry = new(ex, callerFile, callerLine) { Exception = ex};
+            xyExceptionEntry excEntry = new(ex, callerFile, callerLine);
             xyDefaultLogEntry entry = new(callerName ?? string.Empty, level,message ?? ex.Message, DateTimeOffset.Now,ex, callerFile, callerLine)
             {
                 ExceptionEntry = excEntry,

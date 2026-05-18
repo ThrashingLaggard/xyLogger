@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using xyLogger.Interfaces;
 
 namespace xyLogger.Helpers.Formatters
@@ -27,18 +22,7 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="callerLine"></param>
         /// <param name="level">The log level associated with the message. If null, the default log level of "Information" is used.</param>
         /// <returns>A formatted string containing the timestamp, log level, caller information, and the log message.</returns>
-        public string FormatMessageForLogging(string message, LogLevel? level = null, string? callerName = null, string? callerFile = null, int? callerLine = null)
-        {
-            string timestamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-
-            string logLevel = level?.ToString() ?? "Information";
-
-            callerName = string.IsNullOrEmpty(callerName) ? " / " : callerName;
-            callerFile = string.IsNullOrEmpty(callerFile) ? " / " : callerFile;
-            callerLine = string.IsNullOrEmpty(callerLine + "") ? 0 : callerLine;
-            string formattedMessage = $"[{timestamp}] [{logLevel}] [{callerFile}][{callerName}][{callerLine}] {message}";
-
-            return formattedMessage;
-        }
+        public string FormatMessageForLogging(string message, LogLevel? level = null, string? callerName = null, string? callerFile = null, int callerLine = 0) =>xyLogFormatter.FormatMessageForLogging(message, callerName, level, callerFile, callerLine);
+        
     }
 }

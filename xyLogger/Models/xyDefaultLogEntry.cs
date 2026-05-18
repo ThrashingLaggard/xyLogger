@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using xyLogger.Interfaces;
 
@@ -62,7 +63,7 @@ namespace xyLogger.Models
         public xyExceptionEntry? ExceptionEntry { get; set; }
 
         [JsonConstructor]
-        [System.Diagnostics.CodeAnalysis.SetsRequiredMembers]
+        [SetsRequiredMembers]
         public xyDefaultLogEntry(string source_, LogLevel level_, string message_, DateTimeOffset timestamp_, Exception? exception_ = null, string? callerFile_ = null, int callerLine_ = 0)
         {
             Timestamp = timestamp_;
@@ -72,7 +73,7 @@ namespace xyLogger.Models
             Level = level_;
             Message = message_;
             Exception = exception_ ?? default!;
-            ExceptionEntry = exception_ is not null? (new xyExceptionEntry(exception_ , callerFile_, callerLine_) { Exception = exception_, CallerFile = callerFile_, CallerLine = callerLine_}) : default!;
+            ExceptionEntry = exception_ is not null ? new xyExceptionEntry(exception_:exception_, callerFile_, callerLine_) : default!;
         }
 
 
