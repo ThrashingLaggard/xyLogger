@@ -29,7 +29,7 @@ namespace xyLogger.Helpers.Formatters
         /// <returns>A formatted string containing the timestamp, log level, caller information, and the log message.</returns>
         public string FormatMessageForLogging(string message, LogLevel? level = null, string? callerName = null, string? callerFile = null, int? callerLine = null)
         {
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            string timestamp = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 
             string logLevel = level?.ToString() ?? "Information";
 

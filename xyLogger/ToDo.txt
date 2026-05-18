@@ -1,4 +1,3 @@
 # ToDo
 
 - Check the other proposed additions
-- Delete from xyToolz

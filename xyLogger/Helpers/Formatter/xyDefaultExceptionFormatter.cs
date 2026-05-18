@@ -22,12 +22,18 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="callerName"></param>
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
+        /// <param name="depth"></param>
         /// <returns></returns>
-        public string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null,  string? callerFile = null, int? callerLine = null)
+        public string FormatExceptionDetails(Exception ex, string? message = null, LogLevel level = LogLevel.Error, string? callerName = null,  string? callerFile = null, int? callerLine = null, int depth = 1)
         {
+            if (depth > 10)
+            {
+                return $"[InnerException depth {depth} exceeded limit]";
+            }
+
             StringBuilder sb_Builder = new();
 
-            sb_Builder.Append($"{DateTime.Now} [{callerName ?? " / "}] [{callerLine}][{callerFile}][{level}] ");
+            sb_Builder.AppendLine($"{DateTimeOffset.Now} [{level}] [{callerName ?? " / "}] [{callerLine}][{callerFile}]");
 
             if (!string.IsNullOrWhiteSpace(message))
             {
@@ -54,7 +60,7 @@ namespace xyLogger.Helpers.Formatters
             if (ex.InnerException != null)
             {
                 sb_Builder.AppendLine("Inner Exception Details:");
-                sb_Builder.AppendLine(FormatExceptionDetails(ex.InnerException, "", level));
+                sb_Builder.AppendLine(FormatExceptionDetails(ex.InnerException, "", level,depth:depth +1));
             }
 
             return sb_Builder.ToString();

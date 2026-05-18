@@ -23,11 +23,11 @@ namespace xyLogger.Helpers.Formatters
             if (entry_ is xyDefaultLogEntry logEntry)
             {
                 uint ID = logEntry.ID;
-                string description ="Info:" +  (logEntry.Description )?? "";
+                string description ="Info:" +  (logEntry.Description ?? "");
                 string comment = "Comment:" + logEntry.Comment??"";
                 string source = logEntry.Source;
                 LogLevel level = level_ ?? logEntry.Level;
-                string timestamp = DateTime.Now.ToString();
+                string timestamp = DateTimeOffset.Now.ToString();
                 string message = logEntry.Message;
                 Exception? exception = logEntry.Exception?? default;
                 string callerInfo = logEntry.CallerFile + "-" + (callerName ?? "") + logEntry.CallerLine;
@@ -61,20 +61,11 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTime timestamp,  uint? id = null, string? description = null, string? comment= null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
+        public xyDefaultLogEntry PackAndFormatIntoEntity(string source, LogLevel level, string message, DateTimeOffset timestamp,  uint? id = null, string? description = null, string? comment= null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
         {
             xyDefaultLogEntry entry = new(source_: source, level_: level, message_: message, exception_: exception, timestamp_: timestamp, callerFile_: callerFile, callerLine_: callerLine)
             {
-                ID = id ?? 0,
-                CallerFile = callerFile ?? "",
-                CallerLine = callerLine ,
-                Description = description ?? "",
-                Comment = comment ?? "",
-                Source = source,
-                Level = level,
-                Timestamp = timestamp,
-                Message = message,
-                Exception = exception ?? default,
+                ID = id ?? 0
             };
             return entry;
         }

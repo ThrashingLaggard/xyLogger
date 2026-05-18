@@ -16,6 +16,8 @@ namespace xyLogger.Loggers
 
         #region "Properties"
 
+        public LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
+
         // Almost irrelevant, but not utterly.                                                                                                                                      
         private IMessageFormatter? _msgFormatter;
         private IExceptionFormatter? _excFormatter;
@@ -30,16 +32,19 @@ namespace xyLogger.Loggers
        /// <summary>
        /// 
        /// </summary>
+       /// <remarks>
+       /// I should not leave the parameters blank, the fallbacks are hardcoded
+       /// </remarks>
        /// <param name="msgFormatter_"></param>
        /// <param name="excFormatter_"></param>
        /// <param name="logEntryFormatter_"></param>
        /// <param name="exceptionEntryFormatter_"></param>
         public xyConsoleLogger( IMessageFormatter msgFormatter_ =null!, IExceptionFormatter excFormatter_ = null!, IMessageEntityFormatter<T> logEntryFormatter_ = null!, IExceptionEntityFormatter? exceptionEntryFormatter_ = null)
         {
-            _msgFormatter = msgFormatter_?? null!;
-            _excFormatter = excFormatter_?? null!;
-            _logEntryFormatter = logEntryFormatter_?? null!;
-            _excEntryFormatter = exceptionEntryFormatter_ ?? null!;
+            _msgFormatter = msgFormatter_;
+            _excFormatter = excFormatter_;
+            _logEntryFormatter = logEntryFormatter_;
+            _excEntryFormatter = exceptionEntryFormatter_;
         }
             /// <summary>
             /// 
@@ -77,9 +82,24 @@ namespace xyLogger.Loggers
         /// <param name="message">The message to log. Cannot be null or empty.</param>
         /// <param name="level">The severity level of the log message.</param>
         /// <param name="callerName">The name of the calling member. This is automatically populated by the compiler  if not explicitly provided.</param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         public void Log(string message, LogLevel level, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
-        {                                                               
-            string formattedMsg = FormatMsg(message, out _, DateTime.Now, null, null, null, level, callerName, callerFile, callerLine);// _ = xyDefaultLogEntry logEntry
+        {
+            if (level < MinimumLevel) return;
+
+            string formattedMsg = FormatMsg(message, DateTimeOffset.Now, null, null, null, level, callerName, callerFile, callerLine);// _ = xyDefaultLogEntry logEntry
+            Console.WriteLine(formattedMsg);
+            Console.Out.Flush();
+        }
+        public void Log(string template,LogLevel level,IReadOnlyDictionary<string, object?> properties,[CallerMemberName] string? callerName = null,[CallerFilePath] string? callerFile = null,[CallerLineNumber] int callerLine = 0)
+        {
+            if (level < MinimumLevel) return;
+
+            string rendered = xyLogger.Helpers.xyLogTemplate.Render(template, properties);
+
+            string formattedMsg = _msgFormatter is not null? _msgFormatter.FormatMessageForLogging(rendered, level, callerName, callerFile, callerLine): new xyDefaultMessageFormatter().FormatMessageForLogging(rendered, level, callerName, callerFile, callerLine);
+
             Console.WriteLine(formattedMsg);
             Console.Out.Flush();
         }
@@ -94,7 +114,8 @@ namespace xyLogger.Loggers
         /// <param name="message">Optional: additional informationen</param>
         /// <param name="callerName">The name of the calling member. This is automatically populated by the compiler if not explicitly provided.</param>
         public void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
-        {                                                 
+        {
+            if (level < MinimumLevel) return;
             string exMessage = FormatEx(ex, level,out _, message, callerName, callerFile, callerLine);  // _  = xyExceptionEntry excEntry
             Console.WriteLine(exMessage);
             Console.Out.Flush();
@@ -112,10 +133,8 @@ namespace xyLogger.Loggers
         /// <remarks>The exact format of the returned string is determined by the underlying formatter
         /// implementation.</remarks>
         /// <returns>A formatted string that includes the provided message, and optionally the caller name and log level.</returns>
-        private string FormatMsg(string message, out xyDefaultLogEntry logEntry,DateTime? timestamp = null,uint? id = null,string? description = null, string? comment = null, LogLevel? level = LogLevel.Debug, string ? callerName = null, string? callerFile = null, int callerLine = 0)
+        private string FormatMsg(string message,DateTimeOffset? timestamp = null,uint? id = null,string? description = null, string? comment = null, LogLevel? level = LogLevel.Debug, string ? callerName = null, string? callerFile = null, int callerLine = 0)
         {
-            logEntry = FormatIntoDefaultLogEntry(callerName!, (LogLevel)level!, message, timestamp ?? DateTime.Now, id, description, comment, null, callerFile, callerLine);
-
             if (_msgFormatter is not null)
             {
                 return _msgFormatter.FormatMessageForLogging(message, level, callerName, callerFile, callerLine);
@@ -183,7 +202,7 @@ namespace xyLogger.Loggers
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
         /// <returns></returns>
-        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTime timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
+        public xyDefaultLogEntry FormatIntoDefaultLogEntry(string source, LogLevel level, string message, DateTimeOffset timestamp, uint? id = null, string? description = null, string? comment = null, Exception? exception = null, string? callerFile = null, int callerLine = 0)
         {
             if (_logEntryFormatter is not null)
             {
@@ -207,7 +226,7 @@ namespace xyLogger.Loggers
         public xyExceptionEntry FormatIntoExceptionEntry(Exception exception, string? information = null, string? callerFile = null, int callerLine = 0)
         {
             _excEntryFormatter ??= new xyDefaultExceptionEntryFormatter();
-            return _excEntryFormatter.PackAndFormatIntoEntity(exception, DateTime.Now, information,null,null,callerFile, callerLine);
+            return _excEntryFormatter.PackAndFormatIntoEntity(exception, DateTimeOffset.Now, information,null,null,callerFile, callerLine);
         }
 
         /// <summary>

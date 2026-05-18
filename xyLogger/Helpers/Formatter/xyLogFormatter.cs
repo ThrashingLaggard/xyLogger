@@ -38,13 +38,13 @@ namespace xyLogger.Helpers.Formatters
         private const string AttachmentsLabel = "AttachmentsCount: ";
         private const string HeaderLabel = "Header: ";
         private const string BodyLabel = "Body: ";
-        private const string OperationLabel = "Operation: ";
-        private const string DurationLabel = "Duration: ";
+        //private const string OperationLabel = "Operation: ";
+        //private const string DurationLabel = "Duration: ";
         private const string CcLabel = "Cc:";
         private const string BccLabel = "Bcc: ";
         private const int MaxDepth = 69;
 
-        public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions()
+        private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions()
         {
             WriteIndented = true,
         };
@@ -60,18 +60,20 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="level">The log level context in which the exception occurred.</param>
         /// <param name="message">optional additional information</param>
         /// <param name="callerName">Optional: The method or class name that triggered the exception.</param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <param name="depth">Internal recursion depth counter (default 1).</param>
         /// <returns>A full textual description of the exception hierarchy.</returns>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public static string FormatExceptionDetails(Exception ex, LogLevel? level = LogLevel.Error, string? message = null, string? callerName = null, int depth = 1)
+        public static string FormatExceptionDetails(Exception ex, LogLevel? level = LogLevel.Error, string? message = null, string? callerName = null, string? callerFile = null, int callerLine = 0, int depth = 1)
         {
             StringBuilder sb = new(1024);
             string id = Guid.NewGuid().ToString();
-            FormattingExceptionDetails(sb, ex, id, level, message, callerName, depth);
+            FormattingExceptionDetails(sb, ex, id, level, message, callerName, callerFile, callerLine,depth);
 
             return sb.ToString();
         }
-        private static void FormattingExceptionDetails(StringBuilder sb, Exception ex, string id, LogLevel? level = LogLevel.Error, string? message = null, string? callerName = null, int depth = 1)
+        private static void FormattingExceptionDetails(StringBuilder sb, Exception ex, string id, LogLevel? level = LogLevel.Error, string? message = null, string? callerName = null, string? callerFile = null, int callerLine = 0, int depth = 1)
         {
             if (depth > MaxDepth)
             {
@@ -84,9 +86,8 @@ namespace xyLogger.Helpers.Formatters
             {
                 sb.Append("External Message: ").Append(message).AppendLine().AppendLine(); ;
             }
-
-            sb.Append(DateTime.UtcNow).Append("  [").Append(callerName ?? "Unknown").Append("]  [").Append(level).AppendLine("]");
-
+            sb.AppendLine($"{DateTimeOffset.Now} [{level}] [{callerName ?? " / "}] [{callerLine}][{callerFile}]");
+            
             sb.AppendLine($"====================[ EXCEPTION ]====================");
             sb.Append("Exception-ID: ").AppendLine(id);
             sb.Append("Depth: ").Append(depth).AppendLine();
@@ -143,7 +144,7 @@ namespace xyLogger.Helpers.Formatters
                     ["TargetSite"] = ex.TargetSite?.ToString(),
                     ["Source"] = ex.Source,
                     ["StackTrace"] = ex.StackTrace,
-                    ["Timestamp"] = DateTime.UtcNow.ToString("o"),
+                    ["Timestamp"] = DateTimeOffset.Now.ToString("o"),
                     ["Data"] = ex.Data?.Count > 0 ? ex.Data.Cast<DictionaryEntry>().ToDictionary(e => e.Key.ToString()!, e => e.Value?.ToString()) : null,
                     ["InnerException"] = ex.InnerException is not null && depth <= MaxDepth ? BuildExceptionDictionary(ex.InnerException, depth + 1) : null
                 };
@@ -168,13 +169,15 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="message">The message to log.</param>
         /// <param name="callerName">Optional: Caller class/method name.</param>
         /// <param name="level">Optional: Severity level of the log message (default = Information).</param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>A formatted string for logging.</returns>
-        public static string FormatMessageForLogging(string message, string? callerName = null, LogLevel? level = null)
+        public static string FormatMessageForLogging(string message, string? callerName = null, LogLevel? level = null,  string? callerFile = null, int callerLine = 0)
         {
 #if NET6_0_OR_GREATER
-            return string.Create(CultureInfo.InvariantCulture, $"[{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}] [{level ?? LogLevel.Debug}] [{(string.IsNullOrEmpty(callerName) ? "UnknownCaller" : callerName)}] {message}");
+            return string.Create(CultureInfo.InvariantCulture, $"[{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss.fff}] [{level ?? LogLevel.Debug}] [{(string.IsNullOrEmpty(callerName) ? "UnknownCaller" : callerName)}][{callerLine}] [{callerFile}] \n{message}");
 #else
-        return new StringBuilder(128).Append('[').Append(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")).Append("] [").Append(level?.ToString() ?? "Debug").Append("] [").Append(string.IsNullOrEmpty(callerName) ? "UnknownCaller" : callerName).Append("] ").Append(message).ToString();
+        return new StringBuilder(128).Append('[').Append(DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")).Append("] [").Append(level?.ToString() ?? "Debug").Append("] [").Append(string.IsNullOrEmpty(callerName) ? "UnknownCaller" : callerName).Append("] [").Append(callerLine).Append("] [").Append(callerFile).Append("] [").Append(message).ToString();
 #endif
         }
 
@@ -186,13 +189,15 @@ namespace xyLogger.Helpers.Formatters
         /// <param name="callerName">Optional: Caller class/method name.</param>
         /// <param name="level">Optional: Severity level of the log message (default = Information).</param>
         /// <returns>A formatted JSON string for logging.</returns>
-        public static string FormatMessageAsJson(string message, string? callerName = null, LogLevel? level = null)
+        public static string FormatMessageAsJson(string message, string? callerName = null, LogLevel? level = null, string? callerFile = null, int callerLine = 0)
         {
             Dictionary<string, string?> payload = new()
             {
-                ["Timestamp"] = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                ["Timestamp"] = DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                 ["Level"] = level?.ToString() ?? "Debug",
                 ["Caller"] = string.IsNullOrEmpty(callerName) ? "UnknownCaller" : callerName,
+                ["Line"] = callerLine+"",
+                ["File"] = callerFile,
                 ["Message"] = message
             };
             return JsonSerializer.Serialize(payload, jsonOptions);
@@ -213,7 +218,7 @@ namespace xyLogger.Helpers.Formatters
         {
             StringBuilder sb = new(512);
 
-            sb.Append(TimestampLabel).Append(' ').AppendLine(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            sb.Append(TimestampLabel).Append(' ').AppendLine(DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             sb.Append(FromLabel).Append(' ').AppendLine(mailMessage.From?.Address);
             sb.Append(SenderLabel).Append(' ').AppendLine(mailMessage.Sender?.Address);
 

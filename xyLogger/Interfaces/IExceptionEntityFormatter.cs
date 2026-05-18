@@ -19,7 +19,7 @@ namespace xyLogger.Interfaces
         /// <param name="callerFile"></param>
         /// <param name="callerLine"></param>
         /// <returns></returns>
-        xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTime? timestamp = null, string? message = null, uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0);
+        xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTimeOffset? timestamp = null, string? message = null, uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0);
 
         /// <summary>
         /// Unpack information from entity

@@ -57,7 +57,7 @@ namespace xyLogger.Adapters
             => logLevel != LogLevel.None && logLevel >= MinLevel;
 
         /// <inheritdoc/>
-        public void Log<TState>(LogLevel logLevel,EventId eventId,TState state,Exception? exception,Func<TState, Exception?, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (!IsEnabled(logLevel)) return;
             if (formatter is null) return;
@@ -65,17 +65,48 @@ namespace xyLogger.Adapters
             string message = formatter(state, exception);
             string caller = BuildCaller(eventId);
 
-            // Prepend active scope chain when scopes are enabled and something is on the stack.
             if (ScopesEnabled && ScopeStack.Count > 0)
             {
-                string scopeContext = string.Join(" > ", ScopeStack.Reverse().Select(s => s?.ToString() ?? string.Empty));
+                string scopeContext = string.Join(" > ",ScopeStack.Reverse().Select(s => s?.ToString() ?? string.Empty));
                 message = $"[{scopeContext}] {message}";
             }
 
+            IReadOnlyDictionary<string, object?> properties = ExtractProperties(state);
+            string? originalTemplate = ExtractTemplate(state);
+
             if (exception is not null)
+            {
                 _logger.ExLog(exception, message, logLevel, caller);
+            }
+            else if (properties.Count > 0 && originalTemplate is not null)
+            {
+                _logger.Log(originalTemplate, logLevel, properties, caller);
+            }
             else
+            {
                 _logger.Log(message, logLevel, caller);
+            }
+        }
+
+        private static IReadOnlyDictionary<string, object?> ExtractProperties<TState>(TState state)
+        {
+            if (state is IEnumerable<KeyValuePair<string, object?>> kvps)
+            {
+                Dictionary<string, object?> dict = [];
+                foreach (KeyValuePair<string, object?> kv in kvps)
+                    if (kv.Key != "{OriginalFormat}")
+                        dict[kv.Key] = kv.Value;
+                return dict;
+            }
+            return new Dictionary<string, object?>();
+        }
+
+        private static string? ExtractTemplate<TState>(TState state)
+        {
+            if (state is IEnumerable<KeyValuePair<string, object?>> kvps)
+                foreach (KeyValuePair<string, object?> kv in kvps)
+                    if (kv.Key == "{OriginalFormat}") return kv.Value?.ToString();
+            return null;
         }
 
         /// <summary>

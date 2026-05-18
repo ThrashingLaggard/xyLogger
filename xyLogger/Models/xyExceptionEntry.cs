@@ -32,7 +32,7 @@ namespace xyLogger.Models
         /// <summary>
         /// Time of occurance
         /// </summary>
-        public DateTime Timestamp { get; init; }
+        public DateTimeOffset Timestamp { get; init; }
 
         /// <summary>
         /// The root of the problem
@@ -72,7 +72,7 @@ namespace xyLogger.Models
             Exception = exception_;
             InnerException = exception_.InnerException ?? default!;
             TypeOfException = exception_.GetType();
-            Timestamp = DateTime.Now;
+            Timestamp = DateTimeOffset.Now;
             Source = exception_.Source ?? default!;
             StackTrace = exception_.StackTrace ?? default!;
             TargetSite = exception_.TargetSite ?? default!;

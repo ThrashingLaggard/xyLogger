@@ -88,6 +88,10 @@ namespace xyLogger.Loggers
         private readonly static xyLogArchiver _archiver = new(_maxLogFileSize);
         // private static IEnumerable<xyLogTargets> _eTargets = new List<xyLogTargets>();
 
+        /// <summary>
+        /// The lowest acceptable level for logging ops
+        /// </summary>
+        public static LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
 
         public static void Configure(string logDir = "logs")
         {
@@ -192,7 +196,19 @@ namespace xyLogger.Loggers
         /// <returns>The fully formatted log string that was written to the console.</returns>
         public static string Log(string message, [CallerMemberName] string? callerName = null, LogLevel? logLevel = LogLevel.Debug)
         {
+            if (logLevel < MinimumLevel) return "";
+
             string formattedMsg = FormatMsg(message, callerName, logLevel);
+            Output(formattedMsg, callerName);
+
+            return formattedMsg;
+        }
+
+        public static string Log(string template,LogLevel level,IReadOnlyDictionary<string, object?> properties,[CallerMemberName] string? callerName = null)
+        {
+            if (level < MinimumLevel) return string.Empty;
+            string rendered = xyLogTemplate.Render(template, properties);
+            string formattedMsg = FormatMsg(rendered, callerName, level);
             Output(formattedMsg, callerName);
             return formattedMsg;
         }
@@ -204,14 +220,17 @@ namespace xyLogger.Loggers
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <param name="logLevel">
         /// Severity level included in the formatted output. Defaults to <see cref="LogLevel.Debug"/>.
         /// </param>
         /// <returns>A task that resolves to the fully formatted log string that was written.</returns>
-        public static async Task<string> AsxLog(string message, [CallerMemberName] string? callerName = null, LogLevel? logLevel = LogLevel.Debug)
+        public static async Task<string> AsxLog(string message,  LogLevel? logLevel = LogLevel.Debug,[CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
-            string formattedMsg = FormatMsg(message, callerName, logLevel);
+            if (logLevel < MinimumLevel) return "";
 
+            string formattedMsg = FormatMsg(message, callerName, logLevel, callerFile, callerLine);
             await OutputAsync(formattedMsg, callerName);
 
             return formattedMsg;
@@ -228,9 +247,13 @@ namespace xyLogger.Loggers
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
-        public static void ExLog(Exception ex, string? message = null, LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null)
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
+        public static void ExLog(Exception ex, string? message = null, LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
-            string exMessage = FormatEx(ex, level, message, callerName);
+            if (level < MinimumLevel) return;
+
+            string exMessage = FormatEx(ex, message, level, callerName, callerFile, callerLine);
             OutputEx(exMessage, callerName);
         }
 
@@ -238,17 +261,21 @@ namespace xyLogger.Loggers
         /// Formats and writes exception details to the console asynchronously.
         /// </summary>
         /// <param name="ex">The exception to log.</param>
+        /// <param name="message"></param>
         /// <param name="level">
         /// Severity level included in the formatted output. Defaults to <see cref="LogLevel.Error"/>.
         /// </param>
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>A task representing the asynchronous console-write operation.</returns>
-        public static async Task AsxExLog(Exception ex, LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null)
+        public static async Task AsxExLog(Exception ex, string? message = null,LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
-            string exMessage = FormatEx(ex, level, callerName);
+            if (level < MinimumLevel) return;
 
+            string exMessage = FormatEx(ex, message?? "",level, callerName,callerFile, callerLine);
             await OutputExAsync(exMessage, callerName);
         }
 
@@ -256,12 +283,14 @@ namespace xyLogger.Loggers
         /// Serialises an exception to JSON and writes it to the console asynchronously.
         /// </summary>
         /// <param name="ex">The exception to serialise and log.</param>
+        /// <param name="level"></param>
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
         /// <returns>A task representing the asynchronous console-write operation.</returns>
-        public static void JsonExLog(Exception ex, [CallerMemberName] string? callerName = null)
+        public static void JsonExLog(Exception ex, LogLevel level = LogLevel.Information, [CallerMemberName] string? callerName = null)
         {
+            if (level < MinimumLevel) return;
             string json = xyLogFormatter.FormatExceptionAsJson(ex);
             OutputEx(json, callerName);
         }
@@ -270,12 +299,17 @@ namespace xyLogger.Loggers
         /// Serialises an exception to JSON and writes it to the console asynchronously.
         /// </summary>
         /// <param name="ex">The exception to serialise and log.</param>
+        /// <param name="level"></param>
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>A task representing the asynchronous console-write operation.</returns>
-        public static async Task AsxJsonExLog(Exception ex, [CallerMemberName] string? callerName = null)
+        public static async Task AsxJsonExLog(Exception ex, LogLevel level = LogLevel.Information, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
+            if (level < MinimumLevel) return;
+
             string json = xyLogFormatter.FormatExceptionAsJson(ex);
             await OutputExAsync(json, callerName);
         }
@@ -285,15 +319,20 @@ namespace xyLogger.Loggers
         /// Automatically archives the log file if it exceeds the configured size limit.
         /// </summary>
         /// <param name="message">The raw message text to log.</param>
+        /// <param name="level"></param>
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>
         /// <see langword="true"/> if the message was written successfully;
         /// <see langword="false"/> if an exception occurred during the file-write operation.
         /// </returns>
-        public static bool WriteLog(string message, [CallerMemberName] string? callerName = null)
+        public static bool WriteLog(string message, LogLevel level = LogLevel.Information, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
+            if (level < MinimumLevel) return false;
+
             try
             {
                 lock (_threadSafetyLock)
@@ -307,7 +346,7 @@ namespace xyLogger.Loggers
             }
             catch (Exception ex)
             {
-                WriteExLog(ex, LogLevel.Error);
+                WriteExLog(ex, "",LogLevel.Error);
                 return false;
             }
         }
@@ -339,7 +378,7 @@ namespace xyLogger.Loggers
             }
             catch (Exception ex)
             {
-                WriteExLog(ex, LogLevel.Error, callerName);
+                WriteExLog(ex, message,LogLevel.Error, callerName);
                 return false;
             }
         }
@@ -349,17 +388,20 @@ namespace xyLogger.Loggers
         /// Automatically archives the exception log file if it exceeds the configured size limit.
         /// </summary>
         /// <param name="ex">The exception whose details are to be logged.</param>
+        /// <param name="message"></param>
         /// <param name="level">
         /// Severity level included in the formatted output. Defaults to <see cref="LogLevel.Error"/>.
         /// </param>
         /// <param name="callerName">
         /// Name of the calling member, captured automatically via <see cref="CallerMemberNameAttribute"/>.
         /// </param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>
         /// <see langword="true"/> if the exception details were written successfully;
         /// <see langword="false"/> if a secondary exception occurred during the file-write operation.
         /// </returns>
-        public static bool WriteExLog(Exception ex, LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null)
+        public static bool WriteExLog(Exception ex, string? message = null, LogLevel? level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
             lock (_threadSafetyLock)
             {
@@ -367,7 +409,7 @@ namespace xyLogger.Loggers
                 {
                     _archiver.MoveLogToArchiveFileIfTooBig(_exLogFilePath);
 
-                    string exceptionDetails = FormatEx(ex, level, callerName);
+                    string exceptionDetails = FormatEx(ex, message?? "",level,callerName, callerFile, callerLine);
                     File.AppendAllText(_exLogFilePath, exceptionDetails);
                     OutputEx(exceptionDetails, callerName);
                     return true;
@@ -499,7 +541,9 @@ namespace xyLogger.Loggers
             {
                 if (string.IsNullOrWhiteSpace(actionName))
                 {
-                    await AsxExLog(new ArgumentException("ActionName invalid"), LogLevel.Error);
+                    var argEx = new ArgumentException("ActionName invalid.", nameof(actionName));
+                    await AsxExLog(argEx, "",LogLevel.Error);
+                    throw argEx;
                 }
                 await AsxLog(string.Concat("Start: ", actionName));
                 T? result = await action();
@@ -512,7 +556,7 @@ namespace xyLogger.Loggers
             catch (Exception ex)
             {
                 logOnError?.Invoke(ex);// Den im Aufruf per Lambda-Ausdruck generierten Delegaten (in diesem Fall sogar mit Parameter) ansprechen, falls dieser != null 
-                await AsxExLog(ex, LogLevel.Critical, actionName);  // Wenn die Exception nicht anders definiert ist, als die des Delegaten, kommt ggf zweimal die gleiche Nachricht, mit unterschiedlichen Callern
+                await AsxExLog(ex, "",LogLevel.Critical, actionName);  // Wenn die Exception nicht anders definiert ist, als die des Delegaten, kommt ggf zweimal die gleiche Nachricht, mit unterschiedlichen Callern
             }
 
             return default!;
@@ -525,8 +569,10 @@ namespace xyLogger.Loggers
         /// <param name="message">The raw message text to format.</param>
         /// <param name="callerName">Optional name of the originating member.</param>
         /// <param name="level">Optional severity level to include in the formatted output.</param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>A formatted log string including timestamp, caller, level, and message.</returns>
-        public static string FormatMsg(string message, string? callerName = null, LogLevel? level = null) => xyLogFormatter.FormatMessageForLogging(message, callerName, level);
+        public static string FormatMsg(string message, string? callerName = null, LogLevel? level = null, string? callerFile = null, int callerLine = 0) => xyLogFormatter.FormatMessageForLogging(message, callerName, level, callerFile, callerLine);
 
         /// <summary>
         /// Formats exception details for consistent log output by delegating to <see cref="xyLogFormatter"/>.
@@ -535,10 +581,12 @@ namespace xyLogger.Loggers
         /// <param name="level">Severity level to include in the formatted output.</param>
         /// <param name="message">An optional context message to include alongside the exception details.</param>
         /// <param name="callerName">Optional name of the originating member.</param>
+        /// <param name="callerFile"></param>
+        /// <param name="callerLine"></param>
         /// <returns>
         /// A formatted string containing the exception type, message, and stack trace.
         /// </returns>
-        private static string FormatEx(Exception ex, LogLevel? level = LogLevel.Error, string? message = null, string? callerName = null) => xyLogFormatter.FormatExceptionDetails(ex, level, message, callerName);
+        private static string FormatEx(Exception ex, string? message = null,LogLevel? level = LogLevel.Error, string? callerName = null, string? callerFile = null, int callerLine = 0) => xyLogFormatter.FormatExceptionDetails(ex, level, message, callerName, callerFile, callerLine);
 
         #endregion
 

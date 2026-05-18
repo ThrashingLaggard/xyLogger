@@ -12,7 +12,7 @@ namespace xyLogger.Helpers.Formatters
 
 
 
-        public xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTime? timestamp = null,string? message = null,  uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0)
+        public xyExceptionEntry PackAndFormatIntoEntity(Exception exception, DateTimeOffset? timestamp = null,string? message = null,  uint? id = null, string? description = null, string? callerFile = null, int callerLine = 0)
         {
             xyExceptionEntry entry = new(exception, callerFile, callerLine)
             {
@@ -20,7 +20,7 @@ namespace xyLogger.Helpers.Formatters
                 CallerLine = callerLine,
                 Exception = exception,
                 Message = message ?? "",
-                Timestamp = timestamp ?? DateTime.Now,
+                Timestamp = timestamp ?? DateTimeOffset.Now,
                 Description = description ?? "",
             };
             return entry;

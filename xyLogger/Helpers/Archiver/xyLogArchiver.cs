@@ -7,7 +7,7 @@ using xyLogger.Loggers;
 
 namespace xyLogger.Helpers.Archiver
 {
-    internal class xyLogArchiver
+    public class xyLogArchiver
     {
         private readonly long _maxFileSize = 1000000; // 1MB?!
 
@@ -18,7 +18,7 @@ namespace xyLogger.Helpers.Archiver
 
         public string FormatForArchive(string filePath)
         {
-            string archivePath = $"{filePath}_{DateTime.Now:yyyyMMdd_HHmmss}.log";
+            string archivePath = $"{filePath}_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.log";
             xyLog.Log("Formatting for archive: " + archivePath);
             return archivePath;
         }
@@ -45,7 +45,7 @@ namespace xyLogger.Helpers.Archiver
             if (File.Exists(filepath_) && new FileInfo(filepath_).Length > _maxFileSize)
             {
                 string newPath = "";
-                await Task.Run(() => newPath = FormatForArchive(filepath_));
+                newPath = FormatForArchive(filepath_);
                 try
                 {
                     await Task.Run(() => File.Move(filepath_, newPath));

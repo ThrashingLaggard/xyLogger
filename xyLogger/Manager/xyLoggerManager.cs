@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
-using  xyLogger.Helpers.Formatters;
+using xyLogger.Helpers;
+using xyLogger.Helpers.Formatters;
 using xyLogger.Interfaces;
+using xyLogger.Loggers;
+using xyLogger.Models;
 
 namespace xyLogger.Managers
 {
@@ -17,63 +20,61 @@ namespace xyLogger.Managers
         /// </summary>
         public string Description { get; set; } = "Your advertisements here!";
 
-        public ushort Count { get; private set; }
-        
-        private readonly IList<ILogging> _loggers;
+        private readonly object _writeLock = new();
+
+        private volatile ILogging[] _loggers = [];
+
+        public ushort Count => (ushort)_loggers.Length;
+
+        public event EventHandler<xyLogEventArgs>? LogWritten;
+        public event EventHandler<xyLogEventArgs>? ExLogWritten;
 
         /// <summary>
-        /// 
-        /// </summary>
-        public xyLoggerManager()
-        {
-            _loggers = [];
-        }
-
-        /// <summary>
-        /// Registers (a) new logger(s) to the logging system.
+        /// Registers new loggers to the logging system.
         /// </summary>
         /// <remarks>This method adds the specified logger(s) to the internal collection of loggers.  The
         /// registered logger will be used for logging operations performed by the system.</remarks>
         /// <param name="loggers">The logger instance(s) to be registered. Cannot be null.</param>
         public void RegisterLogger(params ILogging[] loggers)
         {
-            foreach (ILogging logger  in loggers)
+            if (loggers is null || loggers.Length == 0) return;
+
+            ILogging[] valid = loggers.Where(l => l is not null).ToArray();
+            
+            try 
             {
-                if (logger is null)
-                {
-                    string output = OutputMissingLogger(logger!);     
-                    Console.WriteLine(output);
-                }
-                else
-                {
-                   _loggers.Add(logger);
-                    Count++;
-                }
+                    lock (_writeLock)
+                    {
+                        if (valid.Length == 0) return;
+
+                        ILogging[] current = _loggers;
+                        ILogging[] updated = new ILogging[current.Length + valid.Length];
+                        current.CopyTo(updated, 0);
+                        valid.CopyTo(updated, current.Length);
+
+                        _loggers = updated;
+                    }
+            }
+            catch (Exception ex)
+            {
+                xyLog.ExLog(ex);
             }
         }
 
-        private string OutputMissingLogger(ILogging logger)
-        {
-            xyDefaultMessageFormatter formatter = new();
-
-            string output = $"{logger} is null!";
-            string formatted = formatter.FormatMessageForLogging(output);
-            string exception = new xyDefaultExceptionFormatter().FormatExceptionDetails(new ArgumentNullException(nameof(logger)), formatted,LogLevel.Error);
-            return exception;
-        }
-
-
-
+    
         /// <summary>
         /// Unregisters the specified logger from the logging system.
         /// </summary>
         /// <remarks>This method removes the specified logger from the collection of active loggers. After
         /// calling this method, the specified logger will no longer receive log messages.</remarks>
         /// <param name="target">The logger instance to be unregistered. Must not be null.</param>
-        public void UnregisterLogger(ILogging target) 
+        public void UnregisterLogger(ILogging target)
         {
-            if (_loggers.Remove(target))
-                Count--;
+            lock (_writeLock)
+            {
+                ILogging[] updated = _loggers.Where(l => l != target).ToArray();
+                _loggers = updated;
+            }
         }
 
 
@@ -89,13 +90,25 @@ namespace xyLogger.Managers
         /// <param name="callerLine"></param>
         public void Log(string message, LogLevel level = LogLevel.Debug, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
-            foreach (ILogging logger in _loggers)
+            ILogging[] snapshot = _loggers;
+            foreach (ILogging logger in snapshot)
             {
                 logger.Log(message, level, callerName, callerFile, callerLine);
             }
+            RaiseLogWritten(message, level, callerName, callerFile, callerLine);
+
         }
 
 
+        public void Log(string template, LogLevel level,IReadOnlyDictionary<string, object?> properties,[CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
+        {
+            ILogging[] snapshot = _loggers;
+            foreach (ILogging logger in snapshot)
+                logger.Log(template, level, properties, callerName, callerFile, callerLine);
+
+            string rendered = xyLogTemplate.Render(template, properties);
+            RaiseLogWritten(rendered, level, callerName, callerFile, callerLine,template, properties);
+        }
         /// <summary>
         /// Logs the specified exception at the given log level using all registered loggers.
         /// </summary>
@@ -107,16 +120,45 @@ namespace xyLogger.Managers
         /// <param name="callerLine"></param>
         public void ExLog(Exception ex, string? message = null, LogLevel level = LogLevel.Error, [CallerMemberName] string? callerName = null, [CallerFilePath] string? callerFile = null, [CallerLineNumber] int callerLine = 0)
         {
-            foreach (ILogging logger in _loggers)
+            ILogging[] snapshot = _loggers;
+            foreach (ILogging logger in snapshot)
             {
                 logger.ExLog(ex, message, level, callerName, callerFile, callerLine);
             }
+            RaiseExLogWritten(ex, message, level, callerName, callerFile, callerLine);
         }
 
-     
+
+        private void RaiseLogWritten(string message, LogLevel level,string? callerName, string? callerFile, int callerLine,string? template = null,IReadOnlyDictionary<string, object?>? properties = null)
+        {
+            if (LogWritten is null) return;  // ← kein Entry bauen wenn niemand zuhört
+
+            xyDefaultLogEntry entry = new(callerName ?? string.Empty, level, message,DateTimeOffset.Now, null, callerFile, callerLine)
+            {
+                MessageTemplate = template ?? string.Empty,
+                Properties = properties ?? new Dictionary<string, object?>(),
+            };
+
+            LogWritten.Invoke(this, new xyLogEventArgs(entry));
+        }
+
+        private void RaiseExLogWritten(Exception ex, string? message, LogLevel level,string? callerName, string? callerFile, int callerLine)
+        {
+            if (ExLogWritten is null) return;
+
+            xyExceptionEntry excEntry = new(ex, callerFile, callerLine) { Exception = ex};
+            xyDefaultLogEntry entry = new(callerName ?? string.Empty, level,message ?? ex.Message, DateTimeOffset.Now,ex, callerFile, callerLine)
+            {
+                ExceptionEntry = excEntry,
+            };
+
+            ExLogWritten.Invoke(this, new xyLogEventArgs(entry));
+        }
+
         public void Shutdown()
         {
-            foreach (ILogging logger in _loggers) logger.Shutdown();
+            ILogging[] snapshot = _loggers;
+            foreach (ILogging logger in snapshot) logger.Shutdown();
         }
     }
 }

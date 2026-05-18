@@ -6,7 +6,7 @@ using xyLogger.Loggers;
 using xyLogger.Models;
 
 
-namespace xyLogger.Helper
+namespace xyLogger.Helpers
 {
     public class xyLogEntrySerializer()
     {
@@ -28,11 +28,11 @@ namespace xyLogger.Helper
             {
                 return entry;
             }
-            else return new xyDefaultLogEntry("", LogLevel.Error, "", DateTime.Now)
+            else return new xyDefaultLogEntry("", LogLevel.Error, "", DateTimeOffset.Now)
             {
                 Source = "xyLogEntry.FromJson()",
                 Message = "Deserialization from JSON failed!",
-                Timestamp = DateTime.Now
+                Timestamp = DateTimeOffset.Now
             };
         }
 
